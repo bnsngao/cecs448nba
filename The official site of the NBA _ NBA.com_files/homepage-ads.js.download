@@ -1,0 +1,41 @@
+/**
+ * Move Ad Flex Slice to 9th position.
+ */
+var $slices = jQuery('#content .field-name-field-page-body > .field-items > .field-item');
+$slices.each(function(i) {
+  if (jQuery(this).find('.nba__adflex--container').length) {
+    var newIndex = Math.min($slices.length-1, 9);
+    if (newIndex !== i) {
+      jQuery('#content .field-name-field-page-body > .field-items > .field-item:eq('+(newIndex-1)+')')
+        .after(jQuery(this));
+    }
+  }
+});
+
+//Set a listener for GPTRenderComplete Event
+//If ad_nfs_atf_02 is 640x60, add css class
+window.AdFuel.addEvent(document, 'GPTRenderComplete', function(event) {
+  if (!event.detail.empty) {
+    var renderedSlotId = event.detail.pos[0];
+    var adSizeWidth = event.detail.renderedSize[0];
+    var adSizeHeight = event.detail.renderedSize[1];
+    if (renderedSlotId === 'nfs_atf_02' && adSizeWidth === 640 && adSizeHeight === 60) {
+      window.jQuery('.marquee-row').first().addClass('ad640');
+    }
+  }
+});
+
+window.AdFuel.queueRegistry('//ssl.cdn.turner.com/ads/nba2/nba_homepage.js', {
+  'dispatch': true,
+  'maintainCorrelator': false,
+  'slots': [
+    'ad_bnr_atf_01',
+    'ad_rect_atf_01',
+    'ad_ns_atf_01',
+    'ad_ns_atf_05',
+    'ad_ns_atf_03',
+    'ad_nfs_atf_01',
+    'ad_nfs_atf_02',
+    'ad_nfs_atf_03'
+  ]
+});

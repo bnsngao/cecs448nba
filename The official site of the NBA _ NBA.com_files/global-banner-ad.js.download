@@ -1,0 +1,30 @@
+//Set a listener for GPTRenderComplete Event
+//If ad_bnr_atf_01 is 728x90, dispatch the ad_nfs_atf_01 slot
+window.AdFuel.addEvent(document, 'GPTRenderComplete', function(event) {
+  if (!event.detail.empty) {
+    var gptSlot = event.detail.asset;
+    var renderedSlotId = event.detail.pos[0];
+    var renderedDivID = event.detail.divId;
+    var adSizeWidth = event.detail.renderedSize[0];
+    var adSizeHeight = event.detail.renderedSize[1];
+    //console.log("ADFUEL: DivID: "+renderedDivID+" Size: "+adSizeWidth+"X"+adSizeHeight);
+    if (renderedSlotId === 'bnr_atf_01' && adSizeWidth === 728 && adSizeHeight === 90) {
+      var elem = document.getElementsByClassName('global-banner-ad-200-90');
+      if (elem && elem[0]) {
+        elem[0].style.display = 'inline-block';
+        window.AdFuel.queueRegistry('//ssl.cdn.turner.com/ads/nba2/singles/nba_global_mktg.js');
+        //console.log("ADFUEL: Dispatched Marketing Ad");
+      }
+    }
+  }
+});
+
+(function () {
+  'use strict';
+  if (typeof (coreVideoPlayerConfig) !== 'undefined') {
+    var elem = document.getElementsByClassName('global-banner-ad-200-90');
+    elem[0].style.display = 'inline-block';
+    window.AdFuel.queueRegistry('//ssl.cdn.turner.com/ads/nba2/singles/nba_global_mktg.js');
+    //console.log("ADFUEL: Dispatched Marketing Ad");
+  }
+}());

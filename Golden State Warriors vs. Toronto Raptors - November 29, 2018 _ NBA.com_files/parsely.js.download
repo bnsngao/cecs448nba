@@ -1,0 +1,87 @@
+(function($, module) {
+    'use strict';
+    var initialize;
+
+    module.PubSub.subscribe("cvp.content.play", parselyPubSubVideoRegiserPlay);
+
+    module.PubSub.subscribe("cvp.content.pause", parselyPubSubVideoRegiserPause);
+
+    module.PubSub.subscribe("cvp.content.end", parselyPubSubVideoRegiserEnd);
+
+    function parselyPubSubVideoRegiserPlay(context, data) {
+
+
+        if (data && data.contentId) {
+            parselyRegisterVideoStart(data.contentId, data);
+        }
+    }
+
+    function parselyPubSubVideoRegiserPause(context, data) {
+        if (data && data.contentId) {
+            if (data.paused) {
+                parselyRegisterVideoEnd(data.contentId, data);
+            }
+            else {
+                parselyRegisterVideoStart(data.contentId, data);
+            }
+        }
+    }
+
+    function parselyPubSubVideoRegiserEnd(context, data) {
+        if (data && data.contentId) {
+            parselyRegisterVideoEnd(data.contentId, data);
+        }
+    }
+
+    function parselyRegisterVideoStart(contentId, data) {
+
+        var video_meta_data = JSON.parse(data.my.getContentEntry(data.contentId));
+
+        var videoTags = [];
+        if (video_meta_data.branding && video_meta_data.branding !== '') {
+            videoTags.push(video_meta_data.branding);
+        }
+        if (video_meta_data.category && video_meta_data.category !== '') {
+            videoTags.push(video_meta_data.category);
+        }
+        var videoTitle = contentId;
+        if (video_meta_data.headline && video_meta_data.headline !== '') {
+            videoTitle = video_meta_data.headline;
+        }
+        var videoCreated = '';
+        if (video_meta_data.dateCreated
+        && video_meta_data.dateCreated.text
+        && video_meta_data.dateCreated !== '') {
+            videoCreated = new Date(video_meta_data.dateCreated.text).getTime();
+        }
+
+        if (window.PARSELY) {
+            console.log('PARSELY VIDEO TRACKING :: VIDEO PLAY :-' + contentId);
+            window.PARSELY.video.trackPlay(
+                contentId,
+                {
+                    // required
+                    title: videoTitle,
+                    // recommended
+                    section: "nba_league_video",
+                    pub_date_tmsp: videoCreated,
+                    tags: videoTags
+                });
+        }
+        else {
+            console.log('window.PARSELY not available');
+        }
+
+    }
+
+    function parselyRegisterVideoEnd(contentId, data) {
+        if (window.PARSELY) {
+            console.log('PARSELY VIDEO TRACKING :: VIDEO PAUSE/END :-' + contentId);
+            window.PARSELY.video.trackPause(contentId);
+        }
+        else {
+            console.log('window.PARSELY not available');
+        }
+    }
+
+}(jQuery, window._nba = window._nba || {}));

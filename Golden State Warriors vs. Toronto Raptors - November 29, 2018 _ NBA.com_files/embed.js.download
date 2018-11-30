@@ -1,0 +1,316 @@
+/*eslint-disable */
+/**
+ * This is the embed sub-namespace of the cvp namespace for the NBA. It is used for controlling embedding of external or internal players on your page.
+ * @namespace _nba.cvp.embed
+ * @memberof! <global>
+ */
+;(function(currNamespace,subNamespace,namespace,settings,scout,ns,globalLogger,pf,w,d) {
+  "use strict";
+  ns.safeCreate([namespace,settings,scout,subNamespace,currNamespace]);
+
+  var head = (d.head || d.getElementsByTagName("head")[0]),
+    embedSettings = w[namespace][settings][subNamespace][currNamespace],
+    pkgName = (embedSettings.pkgEmbedName || "pkgCvpExternalScout"), /* This variable is needed for IE8/IE9. */
+    scout = w[namespace][settings][scout][subNamespace][currNamespace];
+
+  if (!scout.setupComplete) {
+    setup();
+    scout.logger.log("Setup complete.");
+  } else {
+    scout.logger.log("Already setup.");
+  }
+
+  /* Helper Functions */
+
+  /* This will create the _nba.cvp.embed namespace once we know it is safe to add it. */
+  function createEmbedNamespace(scriptUrl) {
+    return function _createEmbedNamespace() {
+      scout.logger.log("cvp namespace loaded. Adding embed namespace.");
+      /* Set up an _nba.cvp.embed namespace we can use to extend functionality
+       * of the embed player. */
+      w[namespace][subNamespace][currNamespace] = {
+        custom:embedCustom,
+        rescan:init(scriptUrl)
+      };
+      scout.logger.log("embed namespace loaded.");
+
+      /* This will scan the DOM (or allow you to rescan again later) to find all
+       * of the embed player instances and fulfill them. Generally this should
+       * catch all instances and start processing them as soon as possible. */
+      w[namespace][subNamespace][currNamespace].rescan();
+    }
+  }
+
+  /**
+   * This is used to embed an external/internal CVP instance into the node specified.
+   * @memberof _nba.cvp.embed#
+   * @method custom
+   * @param {string|object} val - This is either a string which is the ID of the node to embed into, or a node object to embed into (an ID for the node is required).
+   */
+  function embedCustom(val) {
+
+    var currEmbedElement,currEmbedId;
+
+    if (val && typeof val == "string") {
+      currEmbedElement = d.getElementById(val);
+      currEmbedId = val;
+    } else if(val) {
+      currEmbedElement = val;
+      currEmbedId = val.getAttribute("id");
+    }
+
+    if (currEmbedElement) {
+      scout.logger.log("Element found. Attempting to process.");
+      currEmbedElement.setAttribute("data-cvp-customid",currEmbedId);
+      processInstance(currEmbedElement);
+    } else {
+      scout.logger.log("Element not found. Will not attempt to process.");
+    }
+  }
+
+  /*Get a data attribute. */
+  function getData(script,attribute) {
+    return script.getAttribute("data-"+attribute);
+  }
+
+  /* Having to do this extra work because Internet Explorer is garbage. It gets the URL of the scout file so that all instances can be found. */
+  function getScoutUrl() {
+    /* For all real browsers and IE10 and IE11 */
+    var currentScript = (pf.currentScript || pf.actualScript());
+
+    /* Needed for IE8 and IE9 */
+    if (!currentScript) {
+      var files = d.getElementsByTagName("script"),
+        filesLength = files.length;
+      for (var i=0;i<filesLength;i++) {
+        /* NOTE: This is ugly because if the package name never changes, this will break.*/
+        if (files[i].src.indexOf(pkgName) != -1) {
+          currentScript = files[i];
+          break;
+        }
+      }
+    }
+
+    return currentScript.src;
+  }
+
+  /**
+   * This is used to rescan the DOM and will process any external/internal embed players that were added after window.onload fired.
+   * @memberof _nba.cvp.embed#
+   * @method rescan
+   */
+  function init(scriptUrl) {
+    return function _init() {
+      processInstances(scriptUrl);
+    };
+  }
+
+  /* Set any global analytics overrides (this should rarely be used as it is only for specific use cases). */
+  function overrideAnalytics(script,scriptUrl){
+    /* Hack for IE8/IE9 */
+    if (!script) {
+      /* Get one copy of one instance of the script */
+      var files = d.getElementsByTagName("script"),
+        filesLength = files.length;
+
+      for (var i=0;i<filesLength;i++) {
+        if (scriptUrl == files[i].src) {
+          script = files[i];
+          break;
+        }
+      }
+    }
+    return function _overrideAnalytics() {
+      scout.logger.log("analytics loaded. Processing overrides.");
+      var currentAnalytics = {
+          disableAutoPage:getData(script,"analytics-disableautopage"),
+          league:getData(script,"analytics-league"),
+          team:getData(script,"analytics-team"),
+          section:getData(script,"analytics-section")
+        },
+        a = w[namespace]?w[namespace].analytics:undefined;
+      for (var override in currentAnalytics){
+        a.setOverride(override, currentAnalytics[override]);
+      }
+      /* Because IE8/IE9 generally fire window.onload before dynamic scripts have loaded, need this exception for those browsers. */
+      if (w[namespace].PubSub && d.documentMode && (d.documentMode==8 || d.documentMode==9)) {
+        w[namespace].PubSub.publish("analytics.init",{disablePageLoad:"true"});
+      }
+    }
+  }
+
+  /* Process a single instance. */
+  function processInstance(script){
+
+    if (getData(script,"cvp-contentid")) {
+
+      scout.logger.log("Content ID found, processing instance.");
+
+      /* Mark this script as being initialized since we have started processing it. */
+      script.setAttribute("data-initialized","true");
+
+      var videoWrapper, videoContainer, videoContainerInner, videoPlayer,
+        s = script,
+        customId = getData(s,"cvp-customid"),
+        /* Generate a random hex-number string ([0-9a-f]) */
+        random = Math.floor((1 + Math.random()) * 0x1000000).toString(16).substring(1),
+        domId = "_nba_cvp_"+random,
+        currentOverrides = {
+          analytics : {
+            videoPlayerName:getData(s,"cvp-videoplayername"),
+            videoPlayerType:getData(s,"cvp-videoplayertype")
+          },
+          adFree:getData(s,"cvp-adfree"),
+          adSection:getData(s,"cvp-adsection"),
+          context:getData(s,"cvp-context"),
+          headline:getData(s,"cvp-headline"),
+          description:getData(s,"cvp-description"),
+          flashVars : {
+            autostart:getData(s,"cvp-autostart"),
+            contentId:getData(s,"cvp-contentid"),
+            context:getData(s,"cvp-context")
+          },
+          domId:getData(s,"cvp-domid"),
+          height:getData(s,"cvp-height"),
+          playerType:getData(s,"cvp-playertype"),
+          width:getData(s,"cvp-width")
+        },
+        defaults = {
+          adSection:"nba_embedded_player",
+          analytics:{
+            videoPlayerName:"LECVP",
+            videoPlayerType:embedSettings.pkgEmbedVideoPlayerType
+          },
+          callbacks:{
+            onContentEntryLoad:function onContentEntryLoad(my,s,playerId,contentId,queued) {
+              if ((scoutCvp.headline && scoutCvp.headline == "true") || (scoutCvp.description && scoutCvp.description == "true")) {
+                var videoMetaData = w.JSON.parse(my.getContentEntry(contentId)),
+                  playerWrapper = d.getElementById(s.domId+"_player_wrapper");
+              }
+              if (playerWrapper && scoutCvp.description && scoutCvp.description == "true" && playerWrapper.parentNode.getElementsByClassName("nbaCvpDescription").length === 0) {
+                var description = d.createElement("DIV"),
+                  para = d.createElement("P");
+                if (scoutCvp.width) {
+                  description.style.width = scoutCvp.width;
+                }
+                para.appendChild(d.createTextNode(videoMetaData.description));
+                description.className = "nbaCvpDescription";
+                description.appendChild(para);
+                playerWrapper.parentNode.insertBefore(description,playerWrapper.nextSibling);
+              }
+              if (playerWrapper && scoutCvp.headline && scoutCvp.headline == "true" && playerWrapper.parentNode.getElementsByClassName("nbaCvpHeadline").length === 0) {
+                var headline = d.createElement("DIV"),
+                  para = d.createElement("P"),
+                  bold = d.createElement("B");
+                if (scoutCvp.width) {
+                  headline.style.width = scoutCvp.width;
+                }
+                bold.appendChild(d.createTextNode(videoMetaData.headline));
+                para.appendChild(bold);
+                headline.appendChild(para);
+                headline.className = "nbaCvpHeadline";
+                playerWrapper.parentNode.insertBefore(headline,playerWrapper.nextSibling);
+              }
+            }
+          },
+          debug:"false",
+          domId:domId,
+          flashVars:{
+            autostart:"false"
+          },
+          instanceName:"embed_"+(script.getAttribute("data-cvp-domid")?script.getAttribute("data-cvp-domid"):random)
+        },
+        scoutCvp = pf.processOverrides(defaults, currentOverrides);
+
+      videoPlayer = d.createElement('div');
+      videoPlayer.id = (scoutCvp.domId?scoutCvp.domId:domId);
+      videoPlayer.className = "nbaCvpPlayer";
+
+      videoContainerInner = d.createElement('div');
+      videoContainerInner.id = (scoutCvp.domId?scoutCvp.domId:domId)+"_player_inner_wrapper";
+      videoContainerInner.className = "nbaCvpPlayerInnerWrapper";
+      if (scoutCvp.height) {
+        videoContainerInner.style.height = scoutCvp.height;
+      }
+      if (scoutCvp.width) {
+        videoContainerInner.style.width = scoutCvp.width;
+      }
+
+      videoContainer = d.createElement('div');
+      videoContainer.id = (scoutCvp.domId?scoutCvp.domId:domId)+"_player_wrapper";
+      videoContainer.className = "nbaCvpPlayerWrapper";
+      if (scoutCvp.height) {
+        videoContainer.style.height = scoutCvp.height;
+      }
+      if (scoutCvp.width) {
+        videoContainer.style.width = scoutCvp.width;
+      }
+
+      videoWrapper = d.createElement('div');
+      videoWrapper.id = (scoutCvp.domId?scoutCvp.domId:domId)+"_wrapper";
+      videoWrapper.className = "nbaCvpWrapper";
+
+      videoContainerInner.appendChild(videoPlayer);
+      videoContainer.appendChild(videoContainerInner);
+      videoWrapper.appendChild(videoContainer);
+
+      if (customId) {
+        d.getElementById(customId).appendChild(videoWrapper);
+      } else {
+        script.parentNode.insertBefore(videoWrapper,script.nextSibling);
+      }
+
+      /* TODO: Refine how this gets set. */
+      if (scoutCvp.debug && scoutCvp.debug=="true") {
+        ns.safeCreate([namespace,settings,"global"]);
+        w[namespace][settings]["global"]["debug"]="true";
+      }
+      w[namespace].cvp.createInstance(scoutCvp);
+
+    } else {
+      scout.logger.log("No Content ID found, will not process.");
+    }
+  }
+
+  /* Process all un-initialized instances. */
+  function processInstances(scriptUrl){
+    if (w[namespace].cvp) {
+      /* Get one copy of one instance of the script */
+      var files = d.getElementsByTagName("script"),
+        filesLength = files.length;
+
+      for (var i=0;i<filesLength;i++) {
+        if (scriptUrl == files[i].src && files[i].getAttribute("data-initialized") != "true") {
+          scout.logger.log("Processing instance.");
+          processInstance(files[i]);
+        } else if (scriptUrl == files[i].src) {
+          scout.logger.log("Instance already processed.");
+        }
+      }
+    }
+  }
+
+  /* Do some set-up on the page that all external/internal instances will use. */
+  function setup() {
+
+    var type = subNamespace+"."+currNamespace;
+
+    scout.logger = globalLogger.getInstance(type.toLowerCase());
+    scout.logger.log("Begin CVP embed setup.");
+
+    createEmbedNamespace(getScoutUrl())();
+
+    /* Just a double-check to make sure that all instances were caught on the first
+     * processing pass. Generally this should never happen, but the double-check
+     * is minimal load in this case. */
+    pf.addEvent(w,"load",init(getScoutUrl()));
+    scout.setupComplete = true;
+  }
+
+  /* Set the URL to be secure or non-secure. */
+  function turnerSecure(urlPatterns){
+    return (urlPatterns.source.replace("http:","").replace(urlPatterns.nonsecure,(d.location.protocol == "http:"?urlPatterns.nonsecure:urlPatterns.secure)));
+  }
+
+}("embed","cvp",window.cvp_settings.jsNamespace,window.cvp_settings.jsSettings,"scout",window._nbaNamespaceTools,window[window.cvp_settings.jsNamespace]["logger"],window[window.cvp_settings.jsNamespace]["polyfill"],window,document));
+/*eslint-enable */

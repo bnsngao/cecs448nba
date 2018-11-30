@@ -1,0 +1,30 @@
+/**
+ * This is the settings for the global share overrides of the Core Video Player (CVP) NBA namespace.
+ * @namespace _nba.settings.cvp.share
+ * @memberof! <global>
+ */
+;(function(currNamespace,subNamespace,namespace,settings,ns,w,d) {
+
+	ns.safeCreate([namespace,settings,subNamespace]);
+
+	if (!w[namespace][settings][subNamespace][currNamespace]) {
+		w[namespace][settings][subNamespace][currNamespace] = {
+			link:{
+				/*global drupalSettings:true*/
+				baseUrl:drupalSettings.site_url
+			},
+			delicious:{},
+			googleplus:{},
+			reddit:{},
+			digg:{},
+			stumbleupon:{},
+			facebook:{},
+			tumblr:{},
+			twitter:{
+				statusPrefix:"I just saw this on NBA:",
+				statusSuffix:"via @NBA"
+			}
+		}
+	}
+
+}("share","cvp",window.cvp_settings.jsNamespace,window.cvp_settings.jsSettings,window._nbaNamespaceTools,window,document));

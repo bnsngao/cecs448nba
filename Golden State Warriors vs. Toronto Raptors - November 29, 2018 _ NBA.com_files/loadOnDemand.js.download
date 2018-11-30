@@ -1,0 +1,35 @@
+(function($, w, d) {
+  'use strict';
+
+  $(function onReady() {
+
+    $('.nba-cvp-load-on-demand').each(function autoLoad(index, element) {
+      var $element = $(element);
+      if ($element.attr('data-cvp-autoload') === 'true') {
+        $element.html('');
+        window._nba.cvp.embed.custom($element.attr('id'));
+      }
+    });
+
+    $(d).on('click', '.nba-cvp-load-on-demand', function attachOnDemandListener(event) {
+      var $target = $(event.target);
+
+      if (!$target.hasClass('nba-cvp-load-on-demand')) {
+        $target = $target.parents('.nba-cvp-load-on-demand:first');
+      }
+
+      if ($target.length) {
+        $target.html('');
+        $target.removeClass('nba-cvp-load-on-demand');
+        window._nba.cvp.embed.custom($target.attr('id'));
+      }
+
+    });
+
+  });
+
+}(jQuery, window, document));
+
+function onCVPReady() {
+  console.log('ready!');
+}

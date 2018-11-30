@@ -1,0 +1,82 @@
+(function($, Drupal) {
+  'use strict';
+
+  // A demo Drupal behavior
+  Drupal.behaviors.contentList = {
+    attach: function(context, settings) {
+      // Set the Dates to Time ago.
+      $('.content_list--time, .content_promo--time', context).once('setTimeAgo').each(function () {
+        var time = $(this).html();
+        var timeAgo = window.moment(time).fromNow();
+        $(this).html(timeAgo);
+      });
+
+      $('.content_list--paragraph', context).each(function () {
+        if ($(this).width() <= 300) {
+          $(this).parent().addClass('skinny-list');
+        }
+      });
+
+      // Control the scrolling of the content list.
+      $('.content_list--paragraph', context).once('setContentListScroll').each(function () {
+        var parentParagraph = $(this).closest('.paragraph');
+        // One-Up slice set a horizontal scroll.
+        // If the list container is less than 480px then we'll default back to the vertical.
+        if ($(parentParagraph).hasClass('paragraph--type--one-up-slice') && $(this).width() >= 480) {
+          $(this).parent().addClass('horizontal-list');
+          // Define all the variables.
+          var listWidth = 0;
+          var listContainer = $('.content_list--collection', this);
+          var listWrapper = $('.content_list--item_wrapper', this);
+          var containerWidth = $(listContainer).width();
+          var prevBtn = $('.content_list--button_prev', this);
+          var nextBtn = $('.content_list--button_next', this);
+          var currentTranslate = parseInt($(listWrapper).css('transform').split(',')[5]);
+
+          $('.content_list--item', this).each(function(){
+            listWidth = Math.ceil(listWidth + $(this).outerWidth( true ));
+          });
+          // Add a little extra to prevent line wrapping.
+          listWidth = listWidth + 5;
+
+          // Initially set the display of the buttons.
+          toggleButtons(prevBtn, nextBtn, containerWidth, listWidth, currentTranslate);
+
+          // Set the width of the wrapper container.
+          $(listWrapper).width(listWidth);
+
+          $(nextBtn).on('click', function(){
+            currentTranslate = currentTranslate - containerWidth;
+            currentTranslate = (currentTranslate < -(listWidth - containerWidth) ? -(listWidth - containerWidth) : currentTranslate);
+            $(listWrapper).css('transform', 'translateX('+(currentTranslate)+'px)');
+            toggleButtons(prevBtn, nextBtn, containerWidth, listWidth, currentTranslate);
+          });
+
+          $(prevBtn).on('click', function(){
+            currentTranslate = currentTranslate + containerWidth;
+            currentTranslate = (currentTranslate > 0 ? 0 : currentTranslate);
+            $(listWrapper).css('transform', 'translateX('+(currentTranslate)+'px)');
+            toggleButtons(prevBtn, nextBtn, containerWidth, listWidth, currentTranslate);
+          });
+        }
+
+        function toggleButtons(prevBtn, nextBtn, containerWidth, listWidth, currentTranslate) {
+          // Show the buttons if there is scroll room.
+          if (currentTranslate < 0) {
+            $(prevBtn).show();
+          }
+          if (listWidth > containerWidth && currentTranslate < (listWidth - containerWidth)) {
+            $(nextBtn).show();
+          }
+          // Hide the buttons if there is not scroll room.
+          if (currentTranslate >= 0) {
+            $(prevBtn).hide();
+          }
+          if (listWidth <= Math.abs(currentTranslate) + containerWidth) {
+            $(nextBtn).hide();
+          }
+        }
+      });
+    }
+  };
+})(jQuery, Drupal);

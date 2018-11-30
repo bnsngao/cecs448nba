@@ -1,0 +1,63 @@
+/**
+ * @myNBA
+ * myNBA Carousel
+ *
+ */
+(function ($) {
+  Drupal.behaviors.slickCarousel = {
+    attach: function (context, settings) {
+
+      var slickOptions = {
+        infinite: false,
+        dots: false,
+        variableWidth: true,
+        mobileFirst: true,
+        draggable: false
+      };
+
+      //Init the Slick Carousel
+      $('.multi__carousel').slick(slickOptions);
+
+      // Enable/Disable Next Arrow depending on the amt of thumbnails
+      $('.multi__carousel').on('setPosition', slickPos);
+
+      // Doesn't work EXACTLY as the FRD's request, so we are overriding a few things
+      function slickPos(slick) {
+        slick.stopImmediatePropagation();
+
+        // Get the size of the container.
+        var thumbnailsWidth = 0,
+            containerWidth  = $(this).width(),
+            lastThumb       = $(this).find('.carousel__thumb').last(),
+            lastThumbOffset = lastThumb.offset(),
+            lastThumbWidth  = lastThumb.outerWidth(true),
+            lastThumbPos    = lastThumbOffset.left + lastThumbWidth,
+            nextArrow       = $(this).find('.slick-next'),
+            nextArrowOffset = nextArrow.offset(),
+            nextArrowPos    = nextArrowOffset.left;
+
+        $(this).find('.carousel__thumb').each(function(index, el) {
+          var thumbOffset = $(el).offset(),
+              thumbWidth  = $(el).outerWidth(true),
+              thumbPos    = thumbOffset.left + thumbWidth,
+              hidden      = nextArrowPos < thumbPos;
+
+          // Active bug = tabindex === -1
+          $(el).removeAttr('tabindex')
+            .find('a, input, button, select').removeAttr('tabindex');
+
+          // Update the aria setting to work with the updates.
+          $(el).attr('aria-hidden', hidden);
+
+          // Whats the total width of the thumbnails.
+          thumbnailsWidth += $(el).outerWidth(true);
+        });
+
+        var next = containerWidth > thumbnailsWidth || nextArrowPos > lastThumbPos;
+
+        // Are we showing the next arrow or nah?
+        nextArrow.toggleClass('hidden', next);
+      }
+    }
+  };
+})(jQuery);

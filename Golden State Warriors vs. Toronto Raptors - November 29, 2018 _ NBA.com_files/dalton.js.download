@@ -1,0 +1,605 @@
+(function ($, ns, module, settings) {
+
+  module[ns] = {};
+
+  var s = module[window.membership_settings.jsSettings].membership,
+    namespace = window.membership_settings.jsNamespace,
+    game = [],
+    ssoChecked = false,
+    entitlementsSet = false,
+    entitlements = [],
+    checkingSso = false,
+    isLoggedIn = {};
+
+  module[ns].init = function init() {
+    module.PubSub.subscribe("membership.authorized.sso.check", module[ns].moduleCallback);
+    module.PubSub.subscribe("membership.failure.sso.check", module[ns].moduleCallback);
+    module.PubSub.subscribe("membership.unauthorized.sso.check", module[ns].moduleCallback);
+    module.PubSub.subscribe("dalton.success.storage.follow", module[ns].updateFollowStorage);
+    module.PubSub.subscribe("membership.success.cookie.entitlements.set", module[ns].moduleCallback);
+    module.PubSub.subscribe("membership.failure.cookie.entitlements.get", module[ns].moduleCallback);
+    module.PubSub.subscribe("dalton.internal.success.games.entitlement", module[ns].setFPGameEntitlement.bind(this));
+    module.PubSub.subscribe("membership.check.sso", function (msg, data) {
+      this.ssoChecked = true;
+    });
+  };
+
+  module[ns].checkLogin = function checkLogin() {
+    var currCookie = module.cookie.get(module.settings.membership.cookie.userId);
+    if (isLoggedIn.hasOwnProperty('set') || currCookie === "") {
+      if(isLoggedIn.set) {
+        module.PubSub.publish("dalton.success.user.isLoggedIn");
+      }
+      else {
+        var data = {};
+        data['successMsg'] = "dalton.success.user.isLoggedIn";
+        data['failureMsg'] = "dalton.failure.user.isLoggedIn";
+        module.PubSub.publish("dim.mvpd.check.login", data);
+      }
+    }
+    else {
+      if (module.membership.isLoggedIn()) {
+        isLoggedIn.set = true;
+        var cookie = JSON.parse(currCookie);
+        this.entitlements = cookie.entitlements;
+        module.PubSub.publish("dalton.success.user.isLoggedIn");
+        if (!this.ssoChecked) {
+          module[ns].ssoCheck();
+        }
+      }
+      else {
+        isLoggedIn.set = false;
+        module.PubSub.publish("dalton.failure.user.isLoggedIn");
+      }
+    }
+  };
+
+  module[ns].getUserData = function getUserData() {
+    var moduleCallback = function(msg) {
+
+    };
+
+    module.membership.getUserData(moduleCallback, moduleCallback);
+  };
+
+  module[ns].updateUserAttr = function updateUserAttr(attr, operator) {
+    var action = (operator && operator.toLowerCase() === 'delete') ? 'deleteData' : 'putData';
+
+    if(action === 'deleteData') {
+      module.PubSub.publish("membership.delete.follow.attributes", attr);
+    }
+    else {
+      module.PubSub.publish("membership.post.follow.attributes", attr);
+    }
+  };
+
+  module[ns].classicGameEntitlement = function classicGameEntitlement() {
+    var classicGameEntitlementToken = module.PubSub.subscribe('dalton.success.secure.geo', postClassicStreamAccess);
+    var classicGameEntitlementNoToken = module.PubSub.subscribe('dalton.failure.secure.geo', postClassicStreamAccess);
+    var classicGamesAuthZ = module.PubSub.subscribe('dalton.success.classic.games.entitlement', prepareClassicGamesAuthZ);
+    module.PubSub.subscribe('dalton.success.classic.singlegame.entitlement', prepareClassicGamesAuthZ);
+
+    function prepareClassicGamesAuthZ(msg, data) {
+      module.PubSub.unsubscribe(classicGamesAuthZ);
+      if (data['gamePermissions']) {
+        data = data['gamePermissions'][0];
+      }
+      module[ns].gameIdAuthZ(data['availableStreams'][0]['contentId'], data['availableStreams'][0]['consumptionEntitlementSet'], '');
+    }
+
+    function getGeo(msg) {
+      module.membership.getData({
+        contentType: 'application/json',
+        messages: {
+          success: 'dalton.success.secure.geo',
+          failure: 'dalton.failure.secure.geo'
+        },
+        url: window.drupalSettings.ME_GEO_API
+      }, true);
+    }
+
+    function postClassicStreamAccess(msg, data) {
+      module.PubSub.unsubscribe(classicGameEntitlementToken);
+      module.PubSub.unsubscribe(classicGameEntitlementNoToken);
+      var environmentQuery = '',
+          urlBase = '';
+
+      // TODO: sometimes i get tokens with secureGeo, sometimes I don't.
+      // curl -H "app-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E" -X GET http://refgeo.ngtv.io/locate
+      var secureGeoToken = {},
+          preAuthCookie;
+      if (data.token) {
+        secureGeoToken = data;
+      } else {
+        secureGeoToken = {
+          geo: data,
+          token: {
+            jwt: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E'
+          }
+        };
+      }
+
+      if (window.drupalSettings && window.drupalSettings.SDATA_URL_PATH && window.drupalSettings.SDATA_URL_PATH !== 'prod') {
+        urlBase = window.drupalSettings.SDATA_URL_BASE;
+        if (urlBase.indexOf('//') === 0) {
+          urlBase = 'http:' + urlBase;
+        }
+        environmentQuery = '?env=' + urlBase + '/' + window.drupalSettings.SDATA_URL_PATH + '/v2/';
+      }
+
+      module[ns].getCombinedPreAuthCookie(function(data) {
+        module.membership.postData({
+          ContentType: "application/json",
+          accessToken: "xbox_c9e11bdbb042347b7cdf9c38665ba5cd",
+          messages: {
+            success: "dalton.success.classic.games.entitlement",
+            failure: "dalton.failure.classic.games.entitlement"
+          },
+          url: window.drupalSettings['nbatv_config']['userview_api'] + "/streams/view/0/classicgames/" + environmentQuery,
+          data: {
+            "preAuthorizedEntitlements": data["preAuthorizedEntitlements"],
+            "secureGeoToken": secureGeoToken
+          }
+        },true);
+      });
+    }
+
+    getGeo();
+  };
+
+  module[ns].gameIdEntitlement = function gameIdEntitlement(games) {
+    game[0] = games;
+    var gameIdEntitlementToken = module.PubSub.subscribe('dalton.success.secure.geo', postStreamAccess);
+    var gameIdEntitlementNoToken = module.PubSub.subscribe('dalton.failure.secure.geo', postStreamAccess);
+
+    function getGeo(msg) {
+      module.membership.getData({
+        contentType: "application/json",
+        messages: {
+          success: "dalton.success.secure.geo",
+          failure: "dalton.failure.secure.geo"
+        },
+        url: window.drupalSettings.ME_GEO_API
+      }, true);
+    }
+
+    function postStreamAccess(msg, data) {
+      module.PubSub.unsubscribe(gameIdEntitlementToken);
+      module.PubSub.unsubscribe(gameIdEntitlementNoToken);
+      var environmentQuery = '',
+        urlBase = '';
+      // TODO: sometimes i get tokens with secureGeo, sometimes I don't.
+      // curl -H "app-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E" -X GET http://refgeo.ngtv.io/locate
+      var secureGeoToken = {},
+          preAuthCookie;
+      if (data.token) {
+        secureGeoToken = data;
+      } else {
+        secureGeoToken = {
+          geo: data,
+          token: {
+            jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E"
+          }
+        };
+      }
+
+      var filters = [
+        {
+          "language": [
+            "english",
+            "spanish"
+          ],
+          "product": [
+            "leaguepass"
+          ],
+          "streamType": [
+            "home",
+            "away",
+            "condensed",
+            "mobile"
+          ],
+          "media": [
+            "video",
+            "audio"
+          ]
+        }
+      ];
+
+      if (window.drupalSettings && window.drupalSettings.SDATA_URL_PATH && window.drupalSettings.SDATA_URL_PATH !== 'prod') {
+        urlBase = window.drupalSettings.SDATA_URL_BASE;
+        if (urlBase.indexOf('//') === 0) {
+          urlBase = 'http:' + urlBase;
+        }
+        environmentQuery = '?env=' + urlBase + '/' + window.drupalSettings.SDATA_URL_PATH + '/v2/';
+      }
+
+      module[ns].getCombinedPreAuthCookie(function(data) {
+        module.membership.postData({
+          ContentType: "application/json",
+          accessToken: "android_d3265e7db0a21e55bebc1d9d71ced2fa",
+          messages: {
+            success: "dalton.internal.success.games.entitlement",
+            failure: "dalton.failure.games.entitlement"
+          },
+          url: window.drupalSettings['nbatv_config']['userview_api'] + "/streams/view/0/leaguepass/" + environmentQuery,
+          data: {
+            "preAuthorizedEntitlements": data["preAuthorizedEntitlements"],
+            "secureGeoToken": secureGeoToken,
+            "filters": filters,
+            "games": game
+          }
+        },true);
+      });
+    }
+
+    getGeo();
+  };
+
+  module[ns].nbatvEntitlement = function nbatvEntitlement(callAuthZ, airingId) {
+    var nbatvEntitlementToken = module.PubSub.subscribe('dalton.success.secure.geo', postStreamAccess);
+    var nbatvEntitlementNoToken = module.PubSub.subscribe('dalton.failure.secure.geo', postStreamAccess);
+
+    if (callAuthZ) {
+      var nbatvAuthZ = module.PubSub.subscribe('dalton.success.nbatv.entitlement', prepareAuthZ);
+    }
+
+    function getGeo(msg) {
+      module.membership.getData({
+        contentType: "application/json",
+        messages: {
+          success: "dalton.success.secure.geo",
+          failure: "dalton.failure.secure.geo"
+        },
+        url: window.drupalSettings.ME_GEO_API
+      }, true);
+    }
+
+    function postStreamAccess(msg, data) {
+      module.PubSub.unsubscribe(nbatvEntitlementToken);
+      module.PubSub.unsubscribe(nbatvEntitlementNoToken);
+      var environmentQuery = '',
+        urlBase = '';
+      // TODO: sometimes i get tokens with secureGeo, sometimes I don't.
+      // curl -H "app-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E" -X GET http://refgeo.ngtv.io/locate
+      var secureGeoToken = {},
+        preAuthCookie;
+      if (data.token) {
+        secureGeoToken = data;
+      } else {
+        secureGeoToken = {
+          geo: data,
+          token: {
+            jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E"
+          }
+        };
+      }
+
+      if (window.drupalSettings && window.drupalSettings.SDATA_URL_PATH && window.drupalSettings.SDATA_URL_PATH !== 'prod') {
+        urlBase = window.drupalSettings.SDATA_URL_BASE;
+        if (urlBase.indexOf('//') === 0) {
+          urlBase = 'http:' + urlBase;
+        }
+        environmentQuery = '?env=' + urlBase + '/' + window.drupalSettings.SDATA_URL_PATH + '/v2/';
+      }
+
+      module[ns].getCombinedPreAuthCookie(function(data) {
+        module.membership.postData({
+          ContentType: "application/json",
+          accessToken: "android_d3265e7db0a21e55bebc1d9d71ced2fa",
+          messages: {
+            success: "dalton.success.nbatv.entitlement",
+            failure: "dalton.failure.nbatv.entitlement"
+          },
+          url: window.drupalSettings['nbatv_config']['userview_api'] + "/streams/view/0/nbatv/" + environmentQuery,
+          data: {
+            "airingId": airingId,
+            "preAuthorizedEntitlements": data["preAuthorizedEntitlements"],
+            "secureGeoToken": secureGeoToken
+          }
+        },true);
+      });
+
+    }
+
+    function prepareAuthZ(msg, data) {
+      module.PubSub.unsubscribe(nbatvAuthZ);
+      module[ns].gameIdAuthZ(data['streamPermission']['availableStreams'][0]['contentId'], data['streamPermission']['availableStreams'][0]['consumptionEntitlementSet'], airingId);
+    }
+
+
+    getGeo();
+  };
+
+  module[ns].gameIdAuthZ = function gameIdAuthZ(streamId, consumptionEntitlementSet, airingId) {
+    //game[0] = games;
+    var gameIdEntitlementToken = module.PubSub.subscribe('dalton.success.secure.geo', postStreamAccess);
+    var gameIdEntitlementNoToken = module.PubSub.subscribe('dalton.failure.secure.geo', postStreamAccess);
+
+    function getGeo(msg) {
+      module.membership.getData({
+        contentType: "application/json",
+        messages: {
+          success: "dalton.success.secure.geo",
+          failure: "dalton.failure.secure.geo"
+        },
+        url: window.drupalSettings.ME_GEO_API
+      }, true);
+
+    }
+
+    function postStreamAccess(msg, data) {
+      module.PubSub.unsubscribe(gameIdEntitlementToken);
+      module.PubSub.unsubscribe(gameIdEntitlementNoToken);
+      var environmentQuery = '',
+        urlBase = '';
+      // TODO: sometimes i get tokens with secureGeo, sometimes I don't.
+      // curl -H "app-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E" -X GET http://refgeo.ngtv.io/locate
+      var secureGeoToken = {},
+        preAuthCookie;
+      if (data.token) {
+        secureGeoToken = data;
+      } else {
+        secureGeoToken = {
+          geo: data,
+          token: {
+            jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E"
+          }
+        };
+      }
+
+      if (window.drupalSettings && window.drupalSettings.SDATA_URL_PATH && window.drupalSettings.SDATA_URL_PATH !== 'prod') {
+        urlBase = window.drupalSettings.SDATA_URL_BASE;
+        if (urlBase.indexOf('//') === 0) {
+          urlBase = 'http:' + urlBase;
+        }
+        environmentQuery = '?env=' + urlBase + '/' + window.drupalSettings.SDATA_URL_PATH + '/v2/';
+      }
+
+      module[ns].getPreAuthCookieEntitlement(consumptionEntitlementSet, function(data) {
+        module.membership.postData({
+          ContentType: "application/json",
+          accessToken: "iosTablet_da5be5302c7d41b63d55d74a4ccf71b9",
+          messages: {
+            success: "dalton.success.gameid.authz",
+            failure: "dalton.failure.gameid.authz"
+          },
+          url: window.drupalSettings['nbatv_config']['authz_api'] + "/streams/access/0/" + environmentQuery,
+          data: {
+            "preAuthorizedEntitlements": data,
+            "secureGeoToken": secureGeoToken,
+            "contentId": streamId,
+            "airingId": airingId,
+            "appId": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E"
+          }
+        },true);
+      });
+    }
+
+    getGeo();
+  };
+
+  module[ns].getCombinedPreAuthCookie = function getCombinedPreAuthCookie(callback) {
+    var dim_entitlements = false,
+      dalton_entitlements = false,
+      dim_data,
+      dalton_data;
+    var dim_token = module.PubSub.subscribe('dim.data.entitlements', getEntitlements);
+    var dalton_token = module.PubSub.subscribe('dalton.data.entitlements', getEntitlements);
+    module.PubSub.publish('dim.get.entitlements');
+    module.PubSub.publish('dalton.get.entitlements');
+
+    function getEntitlements(msg, data) {
+      if (msg === 'dim.data.entitlements') {
+        dim_data = data;
+        dim_entitlements = true;
+        module.PubSub.unsubscribe(dim_token);
+      } else {
+        dalton_data = data;
+        dalton_entitlements = true;
+        module.PubSub.unsubscribe(dalton_token);
+      }
+
+      if (dim_entitlements && dalton_entitlements) {
+        combineEntitlements(dim_data, dalton_data);
+      }
+    }
+
+    function combineEntitlements(dim_data, dalton_data) {
+      var preAuthCookie = {};
+      preAuthCookie['preAuthorizedEntitlements'] = [];
+      var userCookies = [dim_data, dalton_data];
+      for (var i = 0; i < userCookies.length; i++) {
+        var currCookie = userCookies[i];
+        var currPreAuthCookie = (currCookie !== '') ? JSON.parse(currCookie) : null;
+        if (currPreAuthCookie !== null && currPreAuthCookie["preAuthorizedEntitlements"].length > 0) {
+          preAuthCookie['expirationTimestampMillis'] = currPreAuthCookie['expirationTimestampMillis'];
+          for (var j = 0; j < currPreAuthCookie["preAuthorizedEntitlements"].length; j++) {
+            preAuthCookie['preAuthorizedEntitlements'].push(currPreAuthCookie["preAuthorizedEntitlements"][j]);
+          }
+        }
+      }
+      callback(preAuthCookie);
+    }
+  };
+
+  module[ns].getPreAuthCookieEntitlement = function getPreAuthCookieEntitlement(entitlements, callback) {
+    module[ns].getCombinedPreAuthCookie(function(data) {
+      if (entitlements !== null && data["preAuthorizedEntitlements"].length > 0) {
+        var preAuthz = [];
+        var preAuth =  data["preAuthorizedEntitlements"].find(function(ent) {
+          for (var i =0; i < entitlements.length; i++) {
+            if (ent['id'] === entitlements[i]) {
+              preAuthz.push(ent);
+            }
+          }
+        });
+        callback(preAuthz);
+      } else {
+        callback(data);
+      }
+    });
+  };
+
+  module[ns].moduleCallback = function moduleCallback(msg, data) {
+    switch(msg) {
+      case 'membership.authorized.sso.check':
+        module.PubSub.publish('dalton.authorized.ssoCheck');
+        break;
+      case 'membership.failure.sso.check':
+        module.PubSub.publish('dalton.failure.ssoCheck');
+        break;
+      case 'membership.unauthorized.sso.check':
+        module.PubSub.publish('dalton.unauthorized.ssoCheck');
+        break;
+      case 'membership.success.cookie.entitlements.set':
+        entitlementsSet = true;
+        var currCookie = module.cookie.get(module.settings.membership.cookie.userId);
+        var cookie = JSON.parse(currCookie);
+        this.entitlements = cookie.entitlements;
+        module.PubSub.publish('dalton.success.cookie.updated', cookie);
+        break;
+      case 'membership.failure.cookie.entitlements.get':
+        module.PubSub.publish('dalton.failure.cookie.updated');
+        break;
+    }
+  };
+
+  module[ns].ssoCheck = function ssoCheck() {
+    if (!this.ssoChecked) {
+      module.PubSub.publish("membership.check.sso");
+      this.ssoChecked = true;
+    }
+  };
+
+  module[ns].setTeamEntitlement = function setTeamEntitlement(team) {
+    module.membership.postData({
+      authorization:module.membership.authcode.get(),
+      contentType:"application/json",
+      messages:{
+        success:"dalton.success.update.choiceteams.entitlement",
+        failure:"dalton.failure.update.choiceteams.entitlement"
+      },
+      url:s.servers.ids+"/choiceteams/api/"+s.apiVersion.ids+"/choiceteams",
+      data:{
+        teams:[team]
+      }
+    });
+  };
+
+  module[ns].getTeamEntitlement = function getTeamEntitlement() {
+    if (isLoggedIn.set && this.entitlements.length > 0) {
+      module.membership.getData({
+        authorization: module.membership.authcode.get(),
+        contentType: "application/json",
+        messages: {
+          success: "dalton.success.get.choiceteams.entitlement",
+          failure: "dalton.failure.get.choiceteams.entitlement"
+        },
+        url: s.servers.ids + "/choiceteams/api/" + s.apiVersion.ids + "/choiceteams"
+      });
+    }
+  };
+
+  module[ns].getUnauthenticatedStreamAccess = function getUnauthenticatedStreamAccess(games) {
+    game[0] = games;
+
+    module.PubSub.subscribe('dalton.success.secure.geo', function(msg, data) {
+      var environmentQuery = '',
+        urlBase = '';
+      // TODO: sometimes i get tokens with secureGeo, sometimes I don't.
+      // curl -H "app-id:eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E" -X GET http://refgeo.ngtv.io/locate
+      var secureGeoToken = {};
+      if (data.token) {
+        secureGeoToken = data;
+      } else {
+        secureGeoToken = {
+          geo: data,
+          token: {
+            jwt: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBJZCI6Im5iYS1sZWFndWVwYXNzLWpzLWhjaDdheCIsIm5ldHdvcmsiOiJuYmEiLCJwbGF0Zm9ybSI6ImpzIiwicHJvZHVjdCI6ImxlYWd1ZXBhc3MiLCJpYXQiOjE0OTk5OTQ5ODV9.XwiOdOS4w3LXeAJ5zxR61NtUYkgemptacjCdbGuQb9E"
+          }
+        };
+      }
+
+      if (window.drupalSettings && window.drupalSettings.SDATA_URL_PATH && window.drupalSettings.SDATA_URL_PATH !== 'prod') {
+        urlBase = window.drupalSettings.SDATA_URL_BASE;
+        if (urlBase.indexOf('//') === 0) {
+          urlBase = 'http:' + urlBase;
+        }
+        environmentQuery = '?env=' + urlBase + '/' + window.drupalSettings.SDATA_URL_PATH + '/v2/';
+      }
+
+      module.membership.postData({
+        contentType: "application/json",
+        messages: {
+          success: "dalton.internal.success.games.entitlement",
+          failure: "dalton.failure.games.entitlement"
+        },
+        url: s.servers.ids + "/streamaccess/api/1/streamaccess/" + environmentQuery,
+        data: {
+          "secureGeoToken": secureGeoToken,
+          "games":game
+        }
+      }, true);
+    });
+
+    module.membership.getData({
+      contentType: "application/json",
+      messages: {
+        success: "dalton.success.secure.geo",
+        failure: "dalton.failure.secure.geo"
+      },
+      url: window.drupalSettings.ME_GEO_API
+    }, true);
+
+  };
+
+  module[ns].setFPGameEntitlement = function setFPGameEntitlement(msg, data) {
+    var isFreePreview = false,
+        isFreePreviewEntitled = false,
+        isUserEntitled = false,
+        isTeamSubscriber = false;
+
+    if (window.drupalSettings && window.drupalSettings.free_preview && window.drupalSettings.free_preview !== 'none') {
+      isFreePreview = true;
+    }
+
+    if (isLoggedIn.set && isFreePreview) {
+      for (var i = 0; i < this.entitlements.length;i++) {
+        if (this.entitlements[i] === window.drupalSettings.free_preview) {
+          isFreePreviewEntitled = true;
+        }
+      }
+    }
+
+    if (this.entitlements && this.entitlements.length > 0) {
+      for (var i = 0;i < this.entitlements.length;i++) {
+        if(this.entitlements[i] === 'vipcf'
+          || this.entitlements[i] === 'lpbpnb'
+          || this.entitlements[i] === 'lpcf'
+          || this.entitlements[i] === 'lpbp') {
+          isUserEntitled = true;
+        }
+        if(this.entitlements[i] === 'lpbc') {
+          isTeamSubscriber = true;
+        }
+      }
+    }
+
+    if (data && data.gamePermissions) {
+      for (var i = 0; i < data.gamePermissions.length; i++) {
+        data.gamePermissions[i].isFreePreview = isFreePreview;
+        if(isTeamSubscriber) {
+          data.gamePermissions[i].isUserEntitled = data.gamePermissions[i].videoAccessEntitled;
+        } else {
+          data.gamePermissions[i].isUserEntitled = isUserEntitled;
+        }
+        data.gamePermissions[i].isFreePreviewEntitled = isFreePreviewEntitled;
+      }
+    }
+
+    module.PubSub.publish("dalton.success.games.entitlement", data);
+  };
+
+  module[ns].init();
+
+})(jQuery, "dalton", window._nba = window._nba || {}, window.membership_settings = window.membership_settings || {});

@@ -1,0 +1,365 @@
+/**
+ * This is the NBA Membership PreAuth logic.
+ */
+
+;(function _MembershipUserPreAuthInitWrapper(namespace, subNamespace, settings, ns, w, d) {
+  "use strict";
+  (function _MembershipUserPreAuthInit(s,membership, storage,cookie,pubsub,authcode, w,d,undefined) {
+
+    var params={};
+
+    function initPubSub(params) {
+      pubsub.subscribe("dim.regcode.get",getRegCode);
+      pubsub.subscribe("dim.preauth.resp",getPreAuthRes);
+      pubsub.subscribe("dalton.preauth.resp",getDaltonPreAuthRes);
+      pubsub.subscribe("dalton.preauth.success.resp",successDaltonPreAuthRes);
+      pubsub.subscribe("dim.mvpd.preauth.cookie.set",setPreAuthCookie.bind(params));
+      pubsub.subscribe("dim.nbad.preauth.cookie.set",setPreAuthCookie.bind(params));
+      pubsub.subscribe("dim.authn.cookie.set",setAuthNCookie.bind(params));
+      pubsub.subscribe("dim.authn.expiry.check",checkAuthNCookie);
+      pubsub.subscribe("dim.preauth.success.resp",preAuthRespSuccess);
+      pubsub.subscribe("dim.mvpd.check.login",checkLogIn);
+      pubsub.subscribe("dim.nbad.check.login",checkLogIn);
+      pubsub.subscribe("dim.logout.user", mvpdLogout);
+      pubsub.subscribe("app.post.msg",appPostMsg);
+      pubsub.subscribe("get.mvpd.by.consmpt.ent",getMvpdByConsmptEnt);
+      pubsub.subscribe('dalton.rmv.entitlements', rmvEntitlements);
+      pubsub.subscribe('dim.rmv.entitlements',rmvEntitlements);
+      pubsub.subscribe('dalton.set.entitlements', setEntitlements);
+      pubsub.subscribe('dim.set.entitlements', setEntitlements);
+      pubsub.subscribe('dalton.get.entitlements', getEntitlements);
+      pubsub.subscribe('dim.get.entitlements', getEntitlements);
+    }
+
+    function checkLogIn(msg, data) {
+      var msg_split = msg.split('.');
+      var userCookie = (msg_split[1] === 'mvpd') ? s.cookie.authN : s.cookie.userId;
+      var loggedIn = false;
+      var info;
+      var rscCookie = cookie.get(userCookie);
+      var preAuthCookie = (rscCookie !== '') ? JSON.parse(rscCookie) : false;
+      if (preAuthCookie) {
+        loggedIn = true;
+        if (preAuthCookie['entitlements'] && preAuthCookie['entitlements'].length > 0) {
+          info = [];
+          info['mvpd'] = (msg_split[1] === 'mvpd') ?  preAuthCookie['mvpd'] : 'NBA User';
+        } else {
+          info = 'no entitlements';
+        }
+      }
+
+      if (loggedIn) {
+        pubsub.publish(data.successMsg, info);
+      }
+      else {
+        pubsub.publish(data.failureMsg);
+      }
+    }
+
+    // Auth handling...
+
+    function getRegCode(msg) {
+      membership.postData({
+        contentType:"application/json",
+        messages:{
+          success:"dim.regcode.success.get",
+          failure:"dim.regcode.failure.get"
+        },
+        url:s.servers.ids + '/dim/api/1/regcode',
+        data:JSON.stringify({"channel" : "NBAD"}),
+      },true);
+    }
+
+    function getDaltonPreAuthRes(msg, data) {
+      membership.postData({
+        contentType:"application/json",
+        authorization: authcode.get(),
+        messages:{
+          success:"dalton.preauth.success.resp",
+          failure:"dalton.preauth.failure.resp",
+          unauthorized: "dalton.preauth.failure.resp"
+        },
+        url:s.servers.ids + '/regwall/api/1/regwall/preauthorize',
+      });
+    }
+
+    function getPreAuthRes(msg, token) {
+      membership.postData({
+        contentType:"application/json",
+        "Dim-Authorization": token,
+        messages:{
+          success:"dim.preauth.success.resp",
+          failure:"dim.preauth.failure.resp",
+          unauthorized: "dim.preauth.failure.resp"
+        },
+        url:s.servers.ids + '/dim/api/1/preauthorize',
+      },true);
+    }
+
+    function preAuthRespSuccess(msg, data) {
+      var currCookie = cookie.get(s.cookie.authN);
+      var authNCookie = (currCookie !== '') ? JSON.parse(currCookie) : false;
+      if (authNCookie) {
+        for (var i = 0; i < data.preAuthorizedEntitlements.length; i++) {
+          data.preAuthorizedEntitlements[i]['adobeHashId'] = authNCookie.account;
+        }
+      }
+      pubsub.publish('dim.mvpd.preauth.cookie.set', data);
+    }
+
+    function setAuthNCookie(msg, data) {
+      if (this.hasOwnProperty('platform') && this['platform'] === 'auto'
+        && this.hasOwnProperty('experience') && this['experience'] === 'app') {
+        pubsub.publish("app.post.msg", data);
+      }
+      else {
+        var tokenSplit = data.token.split('|');
+        data['expirationTimeMillis'] = tokenSplit[2];
+        cookie.set({
+          key: s.cookie.authN,
+          value: JSON.stringify(data),
+          path: s.cookie.path,
+          domain: s.cookie.domain
+        });
+      }
+    }
+
+    function setPreAuthCookie(msg, data) {
+      let msg_split = msg.split('.');
+      let userMsg = (msg_split[1] === 'mvpd') ? 'dim.set.entitlements' : 'dalton.set.entitlements';
+      if (this.hasOwnProperty('platform') && this['platform'] === 'auto'
+        && this.hasOwnProperty('experience') && this['experience'] === 'app') {
+        pubsub.publish("app.post.msg", data);
+      } else {
+        pubsub.publish(userMsg, data);
+      }
+    }
+
+    function appPostMsg(msg, data) {
+      if (w.webkit
+        && w.webkit.messageHandlers
+        && w.webkit.messageHandlers.tveCompletionHandler
+        && w.webkit.messageHandlers.tveCompletionHandler.postMessage) {
+        w.webkit.messageHandlers.tveCompletionHandler.postMessage(data);
+      }
+
+      if (w.android && w.android.onTveComplete) {
+        w.android.onTveComplete(JSON.stringify(data));
+      }
+    }
+
+    function checkAuthNCookie(msg) {
+      var currDate = new Date();
+      var currCookie = cookie.get(s.cookie.authN);
+      var authNCookie = (currCookie !== '') ? JSON.parse(currCookie) : false;
+      var expiry = new Date(parseInt(authNCookie['expirationTimeMillis']));
+      if (currDate > expiry) {
+        console.log('authN is expired');
+        cookie.unset({
+          key: s.cookie.authN,
+          path: s.cookie.path,
+          domain: s.cookie.domain
+        });
+      }
+    }
+
+    function getMvpdByConsmptEnt(msg, data) {
+      var mvpd = null;
+      var rscCookie = cookie.get(s.cookie.authN);
+      var preAuthCookie = (rscCookie !== '') ? JSON.parse(rscCookie) : null;
+      if (preAuthCookie !== null && preAuthCookie['entitlements'] && preAuthCookie['entitlements'].length > 0) {
+        mvpd = preAuthCookie['mvpd'];
+      }
+      pubsub.publish("get.consmpt.ent.mvpd",mvpd);
+    }
+
+    function mvpdLogout(msg) {
+      //remove authN cookie
+      cookie.unset({
+        key: s.cookie.authN,
+        path: s.cookie.path,
+        domain: s.cookie.domain
+      });
+
+      //remove preAuthResc cookie
+      pubsub.publish('dim.rmv.entitlements');
+
+      window.localStorage.removeItem("cvp.auth.rememberedProvider");
+
+      pubsub.publish('dim.mvpd.loggedout');
+
+      var newLoc = window.location.href.split("?")[0];
+
+      if (window.location.search.indexOf('regcode') > -1) {
+        window.location = newLoc;
+      } else if ((window.location == newLoc) && (newLoc.includes('/user/'))) {
+        window.location.reload();
+      }
+    }
+
+    function setEntitlements(msg, data) {
+      var key = (msg == 'dim.set.entitlements') ? s.cookie.preauth.mvpd : s.cookie.preauth.nbad;
+      if (typeof(Storage) !== "undefined") {
+        localStorage.setItem(key, JSON.stringify(data));
+      } else {
+        cookie.set({
+          key: key,
+          value: JSON.stringify(data),
+          path: s.cookie.path,
+          domain: s.cookie.domain
+        });
+      }
+    }
+
+    function getEntitlements(msg) {
+      var publishMsg = '',
+        key = '',
+        data,
+        token,
+        failToken,
+        ssoFailToken,
+        currCookie,
+        authNCookie,
+        membershipCookie;
+
+      if (msg === 'dim.get.entitlements') {
+        currCookie = cookie.get(s.cookie.authN);
+        authNCookie = (currCookie !== '') ? JSON.parse(currCookie) : false;
+        if (!authNCookie) {
+          rmvEntitlements('dim.rmv.entitlements');
+        }
+        publishMsg =  'dim.data.entitlements';
+        key = s.cookie.preauth.mvpd;
+        token = pubsub.subscribe('dim.preauth.success.resp', preAuthResp);
+        failToken = pubsub.subscribe('dim.preauth.failure.resp', preAuthResp);
+      } else {
+        currCookie = cookie.get(s.cookie.userId);
+        membershipCookie = (currCookie !== '') ? JSON.parse(currCookie) : false;
+        if (!membershipCookie) {
+          rmvEntitlements('dalton.rmv.entitlements');
+        }
+        publishMsg = 'dalton.data.entitlements';
+        key = s.cookie.preauth.nbad;
+        token = pubsub.subscribe('dalton.preauth.success.resp', preAuthResp);
+        failToken = pubsub.subscribe('dalton.preauth.failure.resp', preAuthResp);
+        ssoFailToken = pubsub.subscribe('membership.unauthorized.sso.check', preAuthResp);
+      }
+
+      if (typeof(Storage) !== "undefined") {
+        data = localStorage.getItem(key);
+        if ( !data || !checkExpiry(data)) {
+          if ( msg === 'dim.get.entitlements') {
+            if (authNCookie && authNCookie.entitlements.length) {
+              pubsub.publish('dim.preauth.resp', authNCookie.token);
+            } else {
+              pubsub.publish(publishMsg, '');
+            }
+          } else {
+            if (membershipCookie  && membershipCookie.entitlements.length > 0) {
+              pubsub.publish('dalton.preauth.resp');
+            } else {
+              pubsub.publish(publishMsg, '');
+            }
+          }
+        } else {
+          pubsub.publish(publishMsg, data);
+          pubsub.unsubscribe(token);
+          pubsub.unsubscribe(failToken);
+        }
+      } else {
+        data = cookie.get(key);
+        pubsub.publish(publishMsg, data);
+        pubsub.unsubscribe(token);
+        pubsub.unsubscribe(failToken);
+      }
+
+      function preAuthResp(msg, data) {
+        var jsonString = (typeof data === 'object' && data.hasOwnProperty('preAuthorizedEntitlements')) ? JSON.stringify(data) : '';
+        pubsub.publish(publishMsg, jsonString);
+        pubsub.unsubscribe(token);
+        pubsub.unsubscribe(failToken);
+        pubsub.unsubscribe(ssoFailToken);
+      }
+
+      function checkExpiry(data) {
+        var currDate = new Date();
+        var preAuthCookie = (data !== '') ? JSON.parse(data) : false;
+        if (preAuthCookie) {
+          for (let i = 0; i < preAuthCookie.preAuthorizedEntitlements.length; i++) {
+            var expiry = new Date(parseInt(preAuthCookie.preAuthorizedEntitlements[i]['expirationTimeMillis']));
+            if (currDate > expiry) {
+              return false;
+            }
+          }
+          return true;
+        }
+        return false;
+      }
+    }
+
+    function rmvEntitlements(msg) {
+      var key = (msg == 'dim.rmv.entitlements') ? s.cookie.preauth.mvpd : s.cookie.preauth.nbad;
+      if (typeof(Storage) !== "undefined") {
+        localStorage.removeItem(key);
+      }
+      cookie.unset({
+        key:key,
+        path:s.cookie.path,
+        domain:s.cookie.domain
+      });
+    }
+
+    function scrubRegcodeFromLocation() {
+      if (window.location.search.indexOf('regcode') > -1) {
+        var winLocSrch = window.location.search;
+        winLocSrch = winLocSrch.substr(1);
+        var params = winLocSrch.split('&');
+        var newSearch = '';
+        jQuery.each(params, function(index, value) {
+          if ( (value.indexOf('regcode') == -1) && (value.indexOf('sessionToken') == -1) ) {
+            newSearch += '&' + value;
+          }
+        });
+        if (newSearch.charAt(0) === '&') {
+          newSearch = newSearch.substr(1);
+        }
+        if (newSearch.length > 0) {
+          newSearch = '?' + newSearch;
+        }
+        var newWinLoc = window.location.origin + window.location.pathname + newSearch + window.location.hash;
+        window.history.pushState('', '', newWinLoc);
+      }
+    }
+
+    function successDaltonPreAuthRes(msg, data) {
+      pubsub.publish('dim.nbad.preauth.cookie.set', data);
+    }
+
+    /* Initialize the module. */
+    (function() {
+      window.location.search
+        .replace(/[?&]+([^=&]+)=([^&]*)/gi, function(str,key,value) {
+            params[key] = value;
+          }
+        );
+      initPubSub(params);
+      if (params.hasOwnProperty('platform') || params['platform'] !== 'auto'
+        || params.hasOwnProperty('experience') || params['experience'] !== 'app') {
+        pubsub.publish('dim.get.entitlements');
+        pubsub.publish('dalton.get.entitlements');
+        pubsub.publish('dim.authn.expiry.check');
+        pubsub.publish('dalton.get.entitlements');
+        pubsub.publish('dim.get.entitlements');
+      }
+
+    }());
+
+  }(w[namespace][settings][subNamespace],
+    w[namespace][subNamespace],
+    w[namespace].storage,
+    w[namespace].cookie,
+    w[namespace].PubSub,
+    w[namespace][subNamespace].authcode,
+    w,
+    d));
+}(window.membership_settings.jsNamespace, "membership", window.membership_settings.jsSettings, window._nbaNamespaceTools, window, document));

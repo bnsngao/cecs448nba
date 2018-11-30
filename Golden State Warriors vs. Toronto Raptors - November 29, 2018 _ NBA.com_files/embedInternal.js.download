@@ -1,0 +1,7 @@
+;(function(currNamespace,subNamespace,namespace,settings,ns,w,d) {
+  ns.safeCreate([namespace,settings,subNamespace,currNamespace]);
+  w[namespace][settings][subNamespace][currNamespace]={
+    pkgEmbedName:"pkgCvpEmbedScout",
+    pkgEmbedVideoPlayerType:"main"
+  };
+}("embed","cvp",window.cvp_settings.jsNamespace,window.cvp_settings.jsSettings,window._nbaNamespaceTools,window,document));

@@ -1,0 +1,64 @@
+/**
+ * This is the main default settings for the Core Video Player (CVP) NBA namespace.
+ * @namespace _nba.settings.cvp.main
+ * @memberof! <global>
+ */
+;(function(currNamespace,subNamespace,namespace,settings,ns,w,d,undefined) {
+
+  ns.safeCreate([namespace,settings,subNamespace]);
+
+  if (!w[namespace][settings][subNamespace][currNamespace]) {
+    w[namespace][settings][subNamespace][currNamespace] = {
+      activateHtml5FileSelection:"true",
+      adFree:"false",
+      adSection:"nba.com_mobile_web_videos",
+      analytics:{
+        heartbeatActive:"true",
+        heartbeatInterval:"30",
+        videoPlayerType:"main",
+        videoPlayerName:"LMCVP"
+      },
+      blankVideo:(w.location.protocol==="https:"?"https://s.cdn.turner.com/xslo/cvp/assets/video/blank.mp4":"http://z.cdn.turner.com/xslo/cvp/assets/video/blank.mp4"),
+      cdnAkamaiVideoFlashPrefix: window.cvp_settings.cdnAkamaiVideoFlashPrefix + "/",
+      cdnAkamaiVideoFlashSuffix: window.cvp_settings.cdnAkamaiVideoFlashSuffix,
+      cdnAkamaiVideoHtml5Prefix: window.cvp_settings.cdnAkamaiVideoHtml5Prefix + "/",
+      cdnAkamaiVideoHtml5Suffix: window.cvp_settings.cdnAkamaiVideoHtml5Suffix,
+      cdnTurnerPrefix: window.cvp_settings.cdnTurnerVideoPrefix + "/",
+      contentIdPrefix:"video/",
+      cvpJs:(w.location.protocol==="https:"?"https://s.cdn.turner.com/xslo/cvp/js/cvp/" + window.cvp_settings.cvpJsVersion:"http://z.cdn.turner.com/xslo/cvp/js/cvp/" + window.cvp_settings.cvpJsVersion),
+      debug:"false",
+      embed:{
+        containerSwf:(w.location.protocol==="https:"?"https://" + window.cvp_settings.containerSwfRoot + window.cvp_settings.cvpContainerVersion:"http://" + window.cvp_settings.containerSwfRoot + window.cvp_settings.cvpContainerVersion),
+        expressInstallSwf:(w.location.protocol==="https:"?"https://s.cdn.turner.com/v5cache/turnerplayer/flash/expressInstall.swf":"http://i.cdn.turner.com/v5cache/turnerplayer/flash/expressInstall.swf"),
+        options:{
+          quality:"high",
+          bgcolor:"#000000",
+          allowFullScreen:"true",
+          allowScriptAccess:"always",
+          wmode:"transparent"
+        }
+      },
+      fileSelectionKeys:{
+        failover:"turner_mp4_blank",
+        mobilePhone:"turner_mp4_960x540_2500,turner_mp4_768x432_1500,turner_mp4_768x432_996,turner_mp4_640x360_800,turner_mp4_640x360_664b,turner_mp4_640x360_600,turner_mp4_480x320_910,turner_mp4_480x270_400,turner_mp4_416x240_200",
+        mobileTablet:"turner_mp4_960x540_2500,turner_mp4_960x540_2104,turner_mp4_768x432_1500,turner_mp4_768x432_1404,turner_mp4_640x360_800,turner_mp4_640x360_600,turner_mp4_480x320_910,turner_mp4_480x270_400,turner_mp4_416x240_200,turner_mp4_416x240_200",
+        wifiPhone:"turner_mp4_1280x720_3500,turner_mp4_960x540_2500,turner_mp4_960x540_2104,turner_mp4_768x432_1500,turner_mp4_768x432_1404,turner_mp4_640x360_800,turner_mp4_640x360_600,turner_mp4_480x320_910,turner_mp4_480x270_400,turner_mp4_416x240_200",
+        wifiTablet:"turner_mp4_1920x1080_5904,turner_mp4_1280x720_3500,turner_mp4_1280x720_3072,turner_mp4_960x540_2500,turner_mp4_960x540_2104,turner_mp4_768x432_1500,turner_mp4_768x432_1404,turner_mp4_640x360_800,turner_mp4_640x360_600,turner_mp4_480x320_910,turner_mp4_480x270_400,turner_mp4_416x240_200"
+      },
+      playerType: "html5",
+      flashVars:{
+        autostart:"false",
+        context:"nba_league",
+        site:"nba",
+        playlistRepeat:"true",
+        profile:(w.location.protocol==="https:"?window.cvp_settings.cvpProfileSecure:window.cvp_settings.cvpProfile)
+      },
+      m3u8Regex:"iPad|iPod|iPhone|Android.5|Android.6|Android.7|Android.8|Android.9",
+      mobileRegex:"Android.*Mobile",
+      width:"100%",
+      height:"100%"
+    };
+
+  }
+
+}("main","cvp",window.cvp_settings.jsNamespace,window.cvp_settings.jsSettings,window._nbaNamespaceTools,window,document));

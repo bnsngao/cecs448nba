@@ -1,0 +1,674 @@
+/*eslint-disable */
+/**
+ * This is the main cvp object used for creating standard instances of the Core Video Player (CVP) for the NBA.
+ * @namespace _nba.cvp
+ * @memberof! <global>
+ */
+;(function(instances,subNamespace,namespace,settings,playlists,ns,w,d) {
+  "use strict";
+  ns.safeCreate([namespace,settings,subNamespace,playlists]);
+
+  w[namespace][subNamespace] = w[namespace][subNamespace] || (function cvp(defaultSettings,globalLogger,pf,pubsub,instances,subNamespace,namespace,settings,w,d,undefined) {
+      var logger = globalLogger.getInstance(subNamespace),
+        allCvpSettings = {},
+        cvpJsScript = d.createElement('script'),
+        head = (d.head || d.getElementsByTagName("head")[0]);
+
+      /* Adding in the CVP player JavaScript */
+      cvpJsScript.onload = function() {
+        w._nba.PubSub.publish('cvp.status.ready');
+        w._nbaCVPLoaded = true;
+        processEarlyInstances();
+      };
+
+      cvpJsScript.src = defaultSettings.cvpJs;
+      head.appendChild(cvpJsScript);
+
+      /* Helper Functions */
+
+      /* Putting in a fix for Android 4.2.x. Basically, video cannot be viewed if the body background is set to "fixed". */
+      /* TODO: Can be removed once Android 4.2.x is no longer a popular Android OS version. */
+      function fixAndroidNativeBrowser() {
+        var currentBody = d.getElementsByTagName("body")[0];
+
+        if (currentBody && currentBody.style && currentBody.style.backgroundAttachment == "fixed" && w.navigator.userAgent.indexOf("Android 4.2") != -1) {
+          logger.log("Android 4.2.x  with fixed body background detected, fixing the background for video.");
+          currentBody.style.backgroundAttachment = "initial";
+        }
+      }
+
+      /* Process any instances that were attempted to be created before the core CVP JavaScript package was loaded. */
+      function processEarlyInstances(){
+        if ( w[namespace][subNamespace][instances] !== undefined && w[namespace][subNamespace].createInstance ){
+          for (var instance in w[namespace][subNamespace][instances]){
+            if( w[namespace][subNamespace][instances][instance].processed === false){
+              var settings = w[namespace][subNamespace][instances][instance].instanceSettings;
+              w[namespace][subNamespace].createInstance(settings);
+            }
+          }
+        }
+      }
+
+      /* Used to normalize the various formats of the content ID that may be passed in. */
+      function prepareContentId(contentId,failoverVideoId) {
+        if (contentId) {
+          if (contentId.substring(0,12) == "/video/teams") {
+            var currContentId = "video/channels/proxy/"+contentId.substring(7);
+          } else if (contentId.substring(0,11) == "video/teams") {
+            var currContentId = "video/channels/proxy/"+contentId.substring(6);
+          } else if (contentId.substring(0,5) == "teams") {
+            var currContentId = "video/channels/proxy/"+contentId;
+          } else {
+            var currContentId = "video/"+contentId.replace(/^video\/|^\/video\//,"");
+          }
+        } else {
+          var currContentId = failoverVideoId;
+        }
+        return currContentId+(w.location.protocol=="https:"?".secure":"");
+      }
+
+      /* Used to make changes to the context for things like forcing the ad-free context of the CVP. */
+      function prepareContext(context,adFree) {
+        if ((adFree && (adFree == "true" || adFree == true)) || ("www.nba.com" != window.cvp_settings.hostLive && w.location.search.indexOf("nbaCvpAdFree=true")!=-1)) {
+          context += "_adfree";
+        }
+        return context;
+      }
+
+      /* Used for doing some clean-up/formatting of any playlists that has been passed in. */
+      function preparePlaylist(list) {
+        if (list && list.constructor === Array && list.length > 0) {
+          logger.log("Preparing playlist.");
+          var len = list.length;
+          for(var i=0;i<len;i++) {
+            list[i]=list[i].replace(/^video\/|^\/video\//,"");
+          }
+          return list;
+        } else {
+          logger.log("No playlist to prepare.");
+          return [];
+        }
+      }
+
+      function cvp() {};
+
+      /**
+       * This is used to create a new instance of the Core Video Player (CVP).
+       * If you pass in a string, then _nba.settings.cvp.* will be searched for an object of that name. That object will then be used as the configuration object.
+       * If you pass in an object, then that object will be used as the configuration object.
+       * @memberof _nba.cvp#
+       * @method createInstance
+       * @param {string|object} data - A data object containing all values to be passed in or a string which is the name of the settings object/file.
+       * Please see the _nba.settings.cvp.main object for details on what can all be put in this object.
+       */
+      cvp.prototype.createInstance = function _createInstance(value) {
+
+        /* BEGIN: Main Function Logic */
+        fixAndroidNativeBrowser();
+
+        if (typeof value === "string") {
+          var instanceSettings = w[namespace][settings][subNamespace][value];
+        } else if (typeof value === "object") {
+          var instanceSettings = value;
+        } else {
+          logger.error("window."+namespace+"."+settings+"."+subNamespace+"."+value+" not found or no configuration object was passed in.");
+          return false;
+        }
+        var cvpSettings = pf.processOverrides(w.JSON.parse(w.JSON.stringify(defaultSettings)),instanceSettings),
+          cvpNamespace = w[namespace][subNamespace];
+        allCvpSettings[cvpSettings.domId] = cvpSettings;
+
+        if (!cvpNamespace[instances]) {
+          cvpNamespace[instances] = {};
+        }
+
+        if(!w.CVP){
+          cvpNamespace[instances][cvpSettings.instanceName] = {};
+          cvpNamespace[instances][cvpSettings.instanceName].instanceSettings = cvpSettings; /* Setting up an object so that we can always see what was initially set for the settings for this instance. */
+          cvpNamespace[instances][cvpSettings.instanceName].processed = false;
+          return false;
+        } else {
+          var setup = prepareSetup(w,namespace,allCvpSettings[cvpSettings.domId],pubsub,settings,subNamespace,playlists);
+          /* Tell the CVP to use its secure mode. */
+          if (w.location.protocol=="https:") {
+            setup.activateHtml5FileSelection = "true";
+            setup.playerType="html5";
+            setup.flashVars.secure="true";
+            setup.flashVars.aspenContext="secure";
+          }
+          /* There is currently a bug in the CVP JavaScript where a bad request for content XML will be made if contentId is set to "undefined".
+           * Fixing this issue on our end for now. Don't wayt to modify all the above logic as we might set a fallback again in the future. */
+          /* TODO: Remove this one contentId bug is fixed. */
+          if (setup.flashVars && !setup.flashVars.contentId) {
+            delete setup.flashVars.contentId;
+          }
+
+          if (setup.flashVars && setup.flashVars.contentId === 'undefined') {
+            delete setup.flashVars.contentId;
+          }
+
+          if (setup.flashVars && setup.flashVars.contentId === 'undefined.secure') {
+            delete setup.flashVars.contentId;
+          }
+
+          /* Set the playlist if it was passed in via flashVars */
+          if (setup.flashVars && setup.flashVars.playlist) {
+            w[namespace][settings][subNamespace][playlists][cvpSettings.instanceName] = setup.flashVars.playlist;
+          }
+          /* Set the debug flag for the CVP namespace. */
+          if (cvpSettings.debug) {
+            w[namespace][settings][subNamespace]["debug"] = cvpSettings.debug;
+          }
+          cvpNamespace[instances][cvpSettings.instanceName] = new w.CVP(setup);
+          cvpNamespace[instances][cvpSettings.instanceName].instanceSettings = cvpSettings; /* Setting up an object so that we can always see what was initially set for the settings for this instance. */
+          cvpNamespace[instances][cvpSettings.instanceName].embedSWF(cvpSettings.domId);
+          cvpNamespace[instances][cvpSettings.instanceName].processed = true;
+
+          return cvpNamespace[instances][cvpSettings.instanceName];
+        }
+        /* END: Main Function Logic */
+
+        /* Helper Functions */
+        function prepareVideoMetaData(my,analytics,cvpSettings) {
+          //Get the data about this video.
+          var videoMetaData = window.JSON.parse(my.getContentEntry(my.getContentId()));
+          //Add anything specific to this player that may not be in the original data object.
+          videoMetaData.videoPlayerMode = my.getPlayerType();
+          videoMetaData.videoPlayerType = cvpSettings.analytics.videoPlayerType;
+          videoMetaData.videoPlayerName = cvpSettings.analytics.videoPlayerName;
+
+          return videoMetaData;
+        }
+
+        function prepareSetup(w,namespace,cvpSettings,pubsub,settings,subNamespace,playlists) {
+          if (cvpSettings.playerType && cvpSettings.playerType == 'html5'
+            && cvpSettings.instanceName && cvpSettings.instanceName == 'live') {
+            var vidElem = document.createElement( "video" );
+            if (vidElem.canPlayType) {
+              if (vidElem.canPlayType( 'application/vnd.apple.mpegURL' ) === '') {
+                cvpSettings.playerType = 'flash';
+              }
+            }
+          }
+          return {
+            id : cvpSettings.domId+"_"+cvpSettings.instanceName,
+            width : cvpSettings.width,
+            height : cvpSettings.height,
+            playerType:(cvpSettings.playerType?cvpSettings.playerType:undefined),
+            flashVars : {
+              autostart: cvpSettings.flashVars.autostart,
+              cachebust:"false",
+              contentId:prepareContentId((cvpSettings.flashVars.contentId || (cvpSettings.flashVars.playlist && cvpSettings.flashVars.playlist.length>0 ? cvpSettings.flashVars.playlist[0]:undefined) || (w[namespace][settings][subNamespace][playlists][cvpSettings.instanceName] && w[namespace][settings][subNamespace][playlists][cvpSettings.instanceName].length>0 ? w[namespace][settings][subNamespace][playlists][cvpSettings.instanceName][0]:undefined)),cvpSettings.failoverVideoId),
+              context: prepareContext(cvpSettings.flashVars.context,cvpSettings.adFree),
+              site : cvpSettings.flashVars.site,
+              playlist: preparePlaylist((cvpSettings.flashVars.playlist || w[namespace][settings][subNamespace][playlists][cvpSettings.instanceName])) || [],
+              playlistRepeat: cvpSettings.flashVars.playlistRepeat,
+              profile : cvpSettings.flashVars.profile
+            },
+            embed : {
+              containerSwf : cvpSettings.embed.containerSwf,
+              expressInstallSwf : cvpSettings.embed.expressInstallSwf,
+              options : {
+                quality : cvpSettings.embed.options.quality,
+                bgcolor : cvpSettings.embed.options.bgcolor,
+                allowFullScreen : cvpSettings.embed.options.allowFullScreen,
+                allowScriptAccess : cvpSettings.embed.options.allowScriptAccess,
+                wmode: cvpSettings.embed.options.wmode
+              }
+            },
+            fileSelection : function _fileSelection(files,contentEntry) {
+
+              /* Set the root path for anything coming from the Turner video CDN (including the unique file path). */
+              var cdnTurnerRoot = cvpSettings.cdnTurnerPrefix+contentEntry.id,
+                /* Adding the required prefix so that requests to find the content XML are successful. */
+                currentId = cvpSettings.contentIdPrefix+contentEntry.id,
+                m3u8Regex = new RegExp(cvpSettings.m3u8Regex),
+                mobileRegex = new RegExp(cvpSettings.mobileRegex),
+                /* Grab the geographic settings as a helped to determine which video to load. */
+                geo = ((w._client && w._client.settings && w._client.settings.geo)?w._client.settings.geo:{});
+
+              logger.log("Akamai Network Type: "+(geo.networkType?geo.networkType:"not mobile"));
+
+              if (cvpSettings.callbacks && cvpSettings.callbacks.fileSelection) {
+                logger.log("Custom \"fileSelection\" callback found.");
+                return cvpSettings.callbacks.fileSelection(this,cvpSettings,{"cdnTurnerRoot":cdnTurnerRoot,"currentId":currentId,"geo":geo},files,contentEntry);
+              } else if (cvpSettings.customHtml5Video) {
+                logger.log("Custom HTML5 video path found: "+cvpSettings.customHtml5Video);
+                return cvpSettings.customHtml5Video;
+              } else if (cvpSettings.activateHtml5FileSelection && cvpSettings.activateHtml5FileSelection != "false") {
+                logger.log("Default HTML5 File Selection Logic Enabled.");
+                /* TODO: This logic will only work once the new dynamic CVP Content XML is in production. */
+                /* NOTE: If you feed in a comma-separated list to the second parameter (in the filterByKey function) like the
+                 * instructions show, it is probably going to do something you don't expect. What would be expected is
+                 * that it would try videos in the order that you specified, what actually happens is that it goes through
+                 * your CVP Content XML list in order and sees if each entry matches one of the keys. If it does match,
+                 * it stops on that video and goes no further. So the order in which videos are listed in the CVP Content
+                 * XML dictate the order in which videos are tried, not the order you specify. However, if you match the order
+                 * in both the CVP Content XML and your filterByKey function, things work as expected.
+                 */
+                if (m3u8Regex.test(window.navigator.userAgent)) {
+                  return this.filterByKey(files,"akamai_multibitrate_m3u8");
+                } else if (currentId == cvpSettings.failoverVideoId) {
+                  /* Used for checking if this is the placeholder video... */
+                  return this.filterByKey(files,cvpSettings.fileSelectionKeys.failover);
+                } else if (geo.networkType=="mobile") {
+                  if (mobileRegex.test(window.navigator.userAgent)) {
+                    /* If you are on a mobile network (3G/4G/LTE) and are a smartphone... */
+                    return this.filterByKey(files,cvpSettings.fileSelectionKeys.mobilePhone);
+                  } else {
+                    /* If you are on a mobile network (3G/4G/LTE) and are not a smartphone, like a tablet... */
+                    return this.filterByKey(files,cvpSettings.fileSelectionKeys.mobileTablet);
+                  }
+                } else {
+                  /* This will be used for anything on the HTML5 player with wifi/wired connection. */
+                  if (mobileRegex.test(window.navigator.userAgent)) {
+                    /* If you are on a wifi/wired network and are a smartphone... */
+                    return this.filterByKey(files,cvpSettings.fileSelectionKeys.wifiPhone);
+                  } else {
+                    /* If you are on a wifi/wired network and are not a smartphone, like a tablet/desktop... */
+                    return this.filterByKey(files,cvpSettings.fileSelectionKeys.wifiTablet);
+                  }
+                }
+              } else {
+                logger.log("Default HTML5 File Selection Logic Disabled. Using HTML5 settings from CVP Content XML.");
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.file.selection",{"my":this,"settings":cvpSettings,"data":{"cdnTurnerRoot":cdnTurnerRoot,"currentId":currentId,"geo":geo},"files":files,"contentEntry":contentEntry});
+              }
+            },
+            onAdPlay:function onContentBegin(my,s,playerId,contentId) {
+              var $freewheel = jQuery('.nba-ad-container.global-nav .nba-ad.freewheel:visible');
+              var $globalnav = jQuery('.nba-ad-container.global-nav .nba-ad.dfp.adfuel-rendered');
+              if ($freewheel.length && $globalnav.length) {
+                $globalnav.css('display','none');
+                $freewheel.addClass('active');
+              }
+            },
+            onAdSetup : function _onAdSetup(playerId) {
+              logger.log("onAdSetup");
+
+              /* If AmazonDirectMatchBuy helper functions are available, fire two functions to interact with the Amazon API.  */
+
+              if (typeof(AmazonDirectMatchBuy) !== 'undefined') {
+                logger.log("AmazonDirectMatchBuy object found. Firing helper functions.");
+                AmazonDirectMatchBuy.setAdKeyValuePairs(this);
+                AmazonDirectMatchBuy.requestAdRefresh();
+              } else {
+                logger.log("No AmazonDirectMatchBuy object found.");
+              }
+
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onAdSetup) {
+                cvpSettings.callbacks.onAdSetup(playerId);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.ad.setup",{"my":this,"settings":cvpSettings,"playerId":playerId});
+              }
+            },
+            onAdEnd : function _onAdEnd(playerId,token,mode,adId,blockId,adType) {
+              logger.log("onAdEnd");
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onAdEnd) {
+                cvpSettings.callbacks.onAdEnd(this,cvpSettings,playerId,token,mode,adId,blockId,adType);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.ad.end",{"my":this,"settings":cvpSettings,"playerId":playerId,"token":token,"mode":mode,"adId":adId,"blockId":blockId,"adType":adType});
+              }
+            },
+            onAdError : function _onAdError(playerId,message) {
+              logger.log("onAdError");
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onAdError) {
+                cvpSettings.callbacks.onAdError(this,cvpSettings,playerId,message);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.ad.error",{"my":this,"settings":cvpSettings,"playerId":playerId,"message":message});
+              }
+            },
+            onAdPrerollUrl : function _onAdPrerollUrl(playerId,contentId) {
+              logger.log("onAdPrerollUrl");
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onAdPrerollUrl) {
+                cvpSettings.callbacks.onAdPrerollUrl(this,cvpSettings,playerId,contentId);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.ad.prerollurl",{"my":this,"settings":cvpSettings,"playerId":playerId,"contentId":contentId});
+              }
+            },
+            onAdStarted : function _onAdStarted(token) {
+              logger.log("onAdStarted");
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onAdStarted) {
+                cvpSettings.callbacks.onAdStarted(this,cvpSettings,token);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.ad.started",{"my":this,"settings":cvpSettings,"token":token});
+              }
+            },
+            onPlayerReady : function _onPlayerReady(playerId) {
+              logger.log("onPlayerReady");
+
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onPlayerReady) {
+                cvpSettings.callbacks.onPlayerReady(this,cvpSettings,playerId);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.player.ready",{"my":this,"settings":cvpSettings,"playerId":playerId});
+              }
+              // Remove download button from chrome html5 player and disable right click menu
+              var videoList = document.querySelectorAll('video');
+              for (var i = 0; i < videoList.length; i++) {
+                videoList[i].setAttribute('controlsList', 'nodownload');
+                jQuery(videoList[i]).bind('contextmenu', function() { return false; });
+              }
+            },
+            onCVPReady : function _onCVPReady() {
+              logger.log("onCVPReady");
+              if (cvpSettings.adSection) {
+                this.setAdSection(cvpSettings.adSection);
+              }
+              if (cvpSettings.analytics && cvpSettings.analytics.heartbeatInterval) {
+                this.setTrackingInterval(cvpSettings.analytics.heartbeatInterval+"s");
+              }
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onCVPReady) {
+                cvpSettings.callbacks.onCVPReady(this,cvpSettings);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.ready",{"my":this,"settings":cvpSettings});
+              }
+            },
+            onContentBegin : function _onContentBegin(playerId,contentId) {
+              logger.log("onContentBegin");
+
+              /* If there is a playlist for this instance, use it. */
+              if (w[namespace][settings][subNamespace][playlists][this.instanceSettings.instanceName]) {
+                var playlist = w[namespace][settings][subNamespace][playlists][this.instanceSettings.instanceName];
+
+                if (playlist.length>0) {
+
+                  var marker = playlist.indexOf(contentId),ct = playlist.length - 1,
+                    repeat = true;
+
+                  // if current video is within the playlist array, queue up the next; otherwise, restart the playlist
+                  if ((marker > -1) && (marker < ct)) {
+                    marker++;
+                  } else {
+                    if (marker != -1 && this.options.flashVars.playlistRepeat && this.options.flashVars.playlistRepeat == "false") {
+                      repeat = false;
+                    }
+                    marker=0;
+                  }
+                  logger.log("queuing: "+playlist[marker]);
+                  if (repeat) {
+                    this.queue(prepareContentId("video/"+playlist[marker]));
+                  }
+                }
+              }
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onContentBegin) {
+                cvpSettings.callbacks.onContentBegin(this,cvpSettings,playerId,contentId);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.content.begin",{"my":this,"settings":cvpSettings,"playerId":playerId,"contentId":contentId});
+              }
+            },
+            onContentEntryLoad : function _onContentEntryLoad(playerId,contentId,queued) {
+              logger.log("onContentEntryLoad");
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onContentEntryLoad) {
+                cvpSettings.callbacks.onContentEntryLoad(this,cvpSettings,playerId,contentId,queued);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.content.load",{"my":this,"settings":cvpSettings,"playerId":playerId,"contentId":contentId,"queued":queued});
+              }
+            },
+            onContentPlay : function _onContentPlay(playerId, contentId, serverIp) {
+              logger.log("onContentPlay");
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onContentPlay) {
+                cvpSettings.callbacks.onContentPlay(this,cvpSettings,playerId,contentId,serverIp);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.content.play",{"my":this,"settings":cvpSettings,"playerId":playerId,"contentId":contentId,"serverIp":serverIp});
+              }
+            },
+            onContentPause : function _onContentPause(playerId, contentId, paused) {
+              logger.log("onContentPause");
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onContentPause) {
+                cvpSettings.callbacks.onContentPause(this,cvpSettings,playerId,contentId,paused);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.content.pause",{"my":this,"settings":cvpSettings,"playerId":playerId,"contentId":contentId,"paused":paused});
+              }
+            },
+            onContentEnd : function _onContentEnd(playerId, contentId) {
+              logger.log("onContentEnd");
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onContentEnd) {
+                cvpSettings.callbacks.onContentEnd(this,cvpSettings,playerId,contentId);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.content.end",{"my":this,"settings":cvpSettings,"playerId":playerId,"contentId":contentId});
+              }
+            },
+            onTrackingContentPlay : function _onTrackingContentPlay(playerId,data) {
+              logger.log("onTrackingContentPlay");
+              var videoMetaData = prepareVideoMetaData(this,w[namespace].analytics,cvpSettings);
+              videoMetaData.additionalData = {"playerId":playerId,"data":data};
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onTrackingContentPlay) {
+                cvpSettings.callbacks.onTrackingContentPlay(this,cvpSettings,playerId,data);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.tracking.play",{"my":this,"settings":cvpSettings,"videoMetaData":videoMetaData});
+              }
+            },
+            onTrackingContentProgress : function _onTrackingContentProgress(playerId,data) {
+              logger.log("onTrackingContentProgress");
+              if (cvpSettings.analytics && cvpSettings.analytics.heartbeatActive && cvpSettings.analytics.heartbeatActive != "false") {
+                var videoMetaData = prepareVideoMetaData(this,w[namespace].analytics,cvpSettings);
+                videoMetaData.additionalData = {"playerId":playerId,"data":data};
+                videoMetaData.focus = "auto";
+                videoMetaData.seconds = (cvpSettings.analytics.heartbeatInterval || "300");
+                if (cvpSettings.callbacks && cvpSettings.callbacks.onTrackingContentProgress) {
+                  cvpSettings.callbacks.onTrackingContentProgress(this,cvpSettings,playerId,data);
+                }
+                if (pubsub) {
+                  pubsub.publish("cvp.tracking.progress",{"my":this,"settings":cvpSettings,"videoMetaData":videoMetaData});
+                }
+              }
+            },
+            onTrackingContentComplete : function _onTrackingContentComplete(playerId,data) {
+              logger.log("onTrackingContentComplete");
+              var videoMetaData = prepareVideoMetaData(this,w[namespace].analytics,cvpSettings);
+              videoMetaData.additionalData = {"playerId":playerId,"data":data};
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onTrackingContentComplete) {
+                cvpSettings.callbacks.onTrackingContentComplete(this,cvpSettings,playerId,data);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.tracking.complete",{"my":this,"settings":cvpSettings,"videoMetaData":videoMetaData});
+              }
+            },
+            onUIEvent : function _onUIEvent(playerId,msgType,data) {
+              logger.log("onUIEvent");
+              var videoMetaData = prepareVideoMetaData(this,w[namespace].analytics,cvpSettings);
+
+              if (cvpSettings.callbacks && cvpSettings.callbacks.onUIEvent) {
+                cvpSettings.callbacks.onUIEvent(this,cvpSettings,playerId,msgType,data);
+              }
+              if (pubsub) {
+                pubsub.publish("cvp.ui.event",{"my":this,"settings":cvpSettings,"playerId":playerId,"msgType":msgType,"data":data,"videoMetaData":videoMetaData});
+              }
+            }
+          };
+        }
+      };
+
+      /**
+       * This is used to remove an instance of the Core Video Player (CVP) from the _nba.cvp namespace.
+       * @memberof _nba.cvp#
+       * @method removeInstance
+       * @param {string} name - A string which is the name of the instance to be removed.
+       */
+      cvp.prototype.removeInstance = function _removeInstance(name) {
+        var cvpNamespace = w[namespace][subNamespace];
+        if (cvpNamespace[instances]) {
+          cvpNamespace[instances][name].destroy();
+          cvpNamespace[instances][name] = undefined;
+          return true;
+        } else {
+          return false;
+        }
+      }
+
+      /**
+       * This is used to retrieve an instance of the Core Video Player (CVP) from the _nba.cvp namespace.
+       * @memberof _nba.cvp#
+       * @method getInstance
+       * @param {string} name - A string which is the name of the instance to be retrieved.
+       */
+      cvp.prototype.getInstance = function _getInstance(name) {
+        var cvpNamespace = w[namespace][subNamespace];
+        if (cvpNamespace[instances]) {
+          return cvpNamespace[instances][name];
+        } else {
+          return false;
+        }
+      }
+
+      /**
+       * This is used to retrieve the playlist for the given instance.
+       * @memberof _nba.cvp#
+       * @method getPlaylist
+       * @param {string} name - A string which is the instance name for the playlist which is to be retrieved.
+       */
+      cvp.prototype.getPlaylist = function _getPlaylist(name) {
+        if (w[namespace][settings][subNamespace][playlists][name]) {
+          return w[namespace][settings][subNamespace][playlists][name];
+        } else {
+          return [];
+        }
+      }
+
+      /**
+       * This is used to return a CVP settings object from _nba.settings.cvp.*
+       * @memberof _nba.cvp#
+       * @method getSettings
+       * @param {string} name - A string which is the name of the CVP settings object to be returned.
+       */
+      cvp.prototype.getSettings = function _getSettings(name) {
+        if (w[namespace][settings][subNamespace][name]) {
+          return w[namespace][settings][subNamespace][name];
+        } else {
+          return false;
+        }
+      }
+
+      /**
+       * This is used to play a specific video ID against a specific CVP instance.*
+       * @memberof _nba.cvp#
+       * @method play
+       * @param {object} data - A data object containing all values to be passed in.
+       * @param {string} data.adSection - Set an ad section for FreeWheel.
+       * @param {object} data.additionalOptions - An optional object that contains information about the video. (Conviva information, for example.)
+       * @param {string} data.contentId - A string which is basically the file path for the CVP Content XML (usually the path to the file sans "/video/").
+       * @param {string} data.fullContentId - A string which is the full path to the CVP Content XML (if this CVP Content XML is somewhere other than "/video/").
+       * @param {string} data.instanceName - A string which is name of the CVP instance to be targeted.
+       * @param {string} data.settingsFile - A string which is the file name of the CVP settings object in _nba.settings.cvp.*
+       * @param {boolean} data.resume - Do a resume after the play (for certain HTML5 trickery).
+       * @param {boolean} data.pause - Do a pause after the play (for additional HTML5 trickery).
+       * @param {boolean} data.stop - Do a stop after the play (for additional HTML5 trickery).
+       */
+      cvp.prototype.play = function _play(data) {
+        var da = data || {},
+          additionalOptions = da.additionalOptions || {},
+          currentCvp = this.getInstance((da.settingsFile?this.getSettings(da.settingsFile).instanceName:da.instanceName));
+
+        if (currentCvp) {
+
+          fixAndroidNativeBrowser();
+
+          if (da.adSection) {
+            currentCvp.setAdSection(da.adSection);
+          }
+          if (da.fullContentId) {
+            currentCvp.play(da.fullContentId,additionalOptions);
+          } else if (da.contentId) {
+            currentCvp.play(currentCvp.instanceSettings.contentIdPrefix+(prepareContentId(da.contentId).replace(/^video\/|^\/video\//,"")),additionalOptions);
+          } else {
+            logger.log("No CVP Content ID was passed to the play function. In rare cases this is expected (like for certain HTML5 video trickery).");
+          }
+          if (da.resume) {
+            currentCvp.resume();
+          }
+          if (da.pause) {
+            currentCvp.pause();
+          }
+          if (da.stop) {
+            currentCvp.stop();
+          }
+        }
+      }
+
+      /**
+       * This is used to set a playlist for a specific instance.
+       * @memberof _nba.cvp#
+       * @method setPlaylist
+       * @param {object} data - A data object containing all values to be passed in.
+       * @param {string} data.instanceName - A string which is name of the CVP instance to be targeted.
+       * @param {string} data.settingsFile - A string which is the file name of the CVP settings object in _nba.settings.cvp.*
+       * @param {array} data.playlist - An array which has the list of CVP content IDs that we want to play.
+       */
+      cvp.prototype.setPlaylist = function _setPlaylist(data) {
+        var da = data || {},
+          instanceName = (da.settingsFile?this.getSettings(da.settingsFile).instanceName:da.instanceName),
+          currentCvp = this.getInstance(instanceName);
+
+        if (da.playlist) {
+          logger.log("Playlist found.");
+          w[namespace][settings][subNamespace][playlists][instanceName] = preparePlaylist(da.playlist);
+        } else {
+          logger.log("Playlist not found.")
+        }
+      }
+
+      /**
+       * This is used to set a global share override value. Look in _nba.settings.cvp.share.* for details.
+       * @memberof _nba.cvp#
+       * @method setShareOverride
+       * @param {string} site - The name of the social network site. For instance, twitter, facebook, etc.
+       * @param {string} key - A string which is name of the social network key to be targeted.
+       * @param {string} val - A string which is the value to be set for a given key.
+       */
+      cvp.prototype.setShareOverride = function _setShareOverride(site,key,val) {
+
+        if (site && key && val) {
+          logger.log("Setting social override value \""+val+"\" for key \""+key+"\" for site \""+site+"\".");
+          w[namespace][settings][subNamespace]["share"][site][key] = val;
+        } else {
+          logger.log("The site \""+site+"\" is not supported as a share site or a proper key/value pair was not set.")
+        }
+      }
+
+      /**
+       * This is used to set a global share override value. Look in _nba.settings.cvp.share.* for details.
+       * @memberof _nba.cvp#
+       * @method setShareOverrides
+       * @param {string} site - The name of the social network site. For instance, twitter, facebook, etc.
+       * @param {object} data - A data object containing the entire object to be set for a given social network.
+       */
+      cvp.prototype.setShareOverrides = function _setShareOverrides(site,data) {
+
+        if (site && data && typeof data === "object") {
+          logger.log("Setting social overrides for site \""+site+"\".");
+          w[namespace][settings][subNamespace]["share"][site] = data;
+        } else {
+          logger.log("The site \""+site+"\" is not supported as a share site.")
+        }
+      }
+
+      logger.log("namespace loaded.");
+      return new cvp;
+
+    }(w[namespace][settings][subNamespace].main,
+      w[namespace].logger,
+      w[namespace].polyfill,
+      w[namespace].PubSub,
+      instances,
+      subNamespace,
+      namespace,
+      settings,
+      w,
+      d));
+
+}("_instances","cvp",window.cvp_settings.jsNamespace,window.cvp_settings.jsSettings,"playlists",window._nbaNamespaceTools,window,document));
+/*eslint-enable */
