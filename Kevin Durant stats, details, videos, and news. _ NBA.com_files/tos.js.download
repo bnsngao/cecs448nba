@@ -1,0 +1,117 @@
+/**
+ * This is the Terms of Service (TOS) namespace.
+ * This namespace just creates the Terms of Service ribbon.
+ * This may eventually be rolled into an _nba.ribbon namespace.
+ * @namespace _nba.tos
+ * @memberof! <global>
+ */
+;(function _nbaTermsOfService(tos,namespace,subNamespace,w,d) {
+  Drupal.behaviors.nbaTos = {
+    attach: function (context, settings, drupalSettings) {
+
+      var appRegex = /app=([a-z]*[A-Z]*)/,
+        isApp;
+
+      if (window.location.search.match(appRegex)) {
+        isApp = window.location.search.match(appRegex)[1];
+        if (isApp === "true") {
+          isApp = true;
+        } else {
+          isApp = false;
+        }
+      } else {
+        isApp = false;
+      }
+
+      //Create the _nba namespace if not there.
+      w[namespace] = w[namespace] || {};
+
+      w[namespace][subNamespace] = w[namespace][subNamespace] ||
+        (function _tos(id, pf, w, d, undefined) {
+          var my = {},
+            notloaded = true,
+            type = subNamespace;
+
+          /* Initialize the TOS Banner. */
+          function init() {
+            if (notloaded) {
+              var showTOS,
+                tosCss = '#nba_tos{position:fixed;bottom:0;left:0;width:100%;background:rgba(255,255,255,0.95);border-top:8px solid #c8102e;z-index:1000;padding:16px 8%;font-size:16px;font-family:"Flama-Basic",sans-serif}#nba_tos #nba_tos_inner{color:#586066;margin-bottom:10px}#nba_tos #nba_tos_inner a{font-family:"Flama-Medium",sans-serif;color:#0071d9}#nba_tos #nba_tos_close_button{font-family:"Flama-Medium",sans-serif;margin:0 auto;display:block;cursor:pointer;background:#0071d9;color:#fff;border-radius:50px;padding:12px 36px}',
+                tosCode = '<div id="nba_tos">' +
+                  '<div id="nba_tos_inner">NBA sites use cookies and similar technologies. By using NBA sites, you are agreeing to our revised <a href="/news/privacy_policy.html" target="_blank">Privacy Policy</a> and <a href="/news/termsofuse.html " target="_blank">Terms of Service</a>, including our <a href="/news/privacy_policy.html#Cookies" target="_blank">Cookie Policy.</a></div>' +
+                  '<button id="nba_tos_close_button" aria-label="close terms of service">I Agree</button>' +
+                  '</div>';
+              if (typeof(w.Storage) !== "undefined") {
+                showTOS = (w.localStorage.getItem(id) !== "Accept") && (d.cookie.indexOf(id) === -1);
+              } else {
+                showTOS = d.cookie.indexOf(id) === -1;
+              }
+              if (showTOS) {
+                loadStyleSheet(tosCss);
+                d.body.insertAdjacentHTML('afterbegin', tosCode);
+                var button = d.getElementById("nba_tos_close_button");
+                pf.addEvent(button, "click", close);
+                pf.addEvent(button, "keypress", close);
+              }
+              notloaded = false;
+            }
+          }
+
+          /* Close the TOS banner and set the local storage. */
+          function close() {
+            var elem = d.getElementById("nba_tos");
+            if (elem) {
+              elem.parentNode.removeChild(elem);
+            }
+            try {
+              w.localStorage.setItem(id, "Accept");
+            } catch (e) {
+              d.cookie = id + "=accept; expires=Sun, 1 Jan 2023 12:00:00 GMT; path=/";
+            }
+          }
+
+          /* This dynamically sets the style sheet.  Needed for IE8 through IE11. */
+          function loadStyleSheet(z) {
+            if (navigator.userAgent.indexOf('MSIE') !== -1 || navigator.appVersion.indexOf('Trident/') > 0) {
+              try {
+                document.createStyleSheet().cssText = z;
+              } catch (e) {
+                if (document.styleSheets[0]) {
+                  document.styleSheets[0].cssText += z;
+                }
+              }
+            } else {
+              var ea = document.createElement('style');
+              ea.type = 'text/css';
+              ea.textContent = z;
+              document.getElementsByTagName('head')[0].appendChild(ea);
+            }
+          }
+
+          /* Expose only the functions we want people to use. */
+          my.close = close;
+
+          /* If the document body already exists, then fire off immediately, otherwise attach to page-load events. */
+          if (!isApp) {
+            if (d.body) {
+              init();
+            } else {
+              //Initialize with the DOM is ready.
+              pf.addEvent(d, "DOMContentLoaded", init);
+              pf.addEvent(w, "load", init);
+            }
+          }
+
+          /* This is where you return all of your public methods. */
+          return my;
+
+        }(tos,
+          w[namespace]["polyfill"],
+          w,
+          d));
+
+      /* Below we are using global CMS3 variables to set the main NBA namespace and
+       * namespace for settings. Also we pass in the namespace tools, etc. */
+    }
+  };
+}("NBATOS20180525","_nba","tos",window,document));

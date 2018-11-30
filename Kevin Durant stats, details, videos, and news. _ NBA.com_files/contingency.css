@@ -1,0 +1,26 @@
+/* keep empty */
+.scoreboard .summer_league_banner { display: none; }
+/* CSSU  made us aware of incorrect Denver Nuggets hex color, using this file for now to avoid a build today (10-1-2018) */
+.gamedetail__matchup--lead_tracker--graph path.team-den {
+    fill: #0e2240;
+    color: #0e2240;
+}
+.gamedetail__matchup--lead_tracker--biggest_lead .team-away__biggest-lead.team-den, .gamedetail__matchup--lead_tracker--biggest_lead .team-home__biggest-lead.team-den {
+    fill: #0e2240;
+    color: #0e2240;
+}
+.nuggets .numbercol, .nuggets .numberbar {
+    background-color: #0e2240;
+}
+.donut-chart.nuggets .percentage, .donut-chart.nuggets .fraction, .donut-chart.nuggets .pct {
+    fill: #0e2240;
+}
+#gamedetails__matchup--lastest_team_stats .pies .nuggets .percentage, #gamedetails__matchup--lastest_team_stats .pies .nuggets .fraction {
+    fill: #0e2240;
+}
+#gamedetails__matchup--lastest_team_stats .nuggets .numberval {
+    color: #0e2240;
+}
+.asContainer .menu.allstar-menu li:nth-child(3):hover > ul li a:hover {
+    padding-bottom: 0 !important;
+}
