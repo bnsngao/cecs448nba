@@ -1,0 +1,10 @@
+.nba nav .nba-nav__account{
+    background: url(http://www.nba.com/themes/custom/league/assets/images/global-navigation/profile.svg) 0 0 no-repeat;
+    background-size: 30px;
+    height: 30px;
+    margin-top 0;
+    overflow: hidden;
+    padding: 3px 0 0 0;
+    text-indent: 37px;
+    text-overflow: ellipsis;
+}

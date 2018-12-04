@@ -1,0 +1,7 @@
+.nba nav .nba-nav__container--button {
+    width: 24px;
+    background: url(http://www.nba.com/themes/custom/league/assets/images/global-navigation/nav_open.svg) 0 0 no-repeat;
+    height: 20px;
+    margin: 19px 19px 15px 20px;
+    background-size: 23px;
+}

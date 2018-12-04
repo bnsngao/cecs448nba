@@ -1,0 +1,8 @@
+.nba-nav .nba-nav__container--logo {
+    margin: 12px 0 0 0;
+    display: inline-block;
+    background: url(http://www.nba.com/themes/custom/league/assets/images/global-navigation/nav_logoman.svg) 0 0 no-repeat;
+    background-size: 100%;
+    width: 68px;
+    height: 31px;
+}
