@@ -51,11 +51,6 @@
 
   <body class="has-sap-sponser">
 
-    <header id="header-ad">
-      <div id="ad_bnr_atf_02"></div>
-      <div id="ad_mod_92f78ded2"></div>
-    </header>
-
     <div class="[ show-for-large ] turner-nav">
       <script>
   function getTChannelName() {
@@ -1041,95 +1036,10 @@
               </div>
           </div>
 
-          <div class="player-stats n-p [ columns / small-12 ]">
-              <div class="player-stats__right n-p [ columns / medium-4 / medium-push-8 ]">
-                  <div class="player-stats__item player-stats__pts n-p [ columns / small-3 ] stats-link" ng-class="{ &#39;stats-link&#39;: availableStats.current }">
-                      <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/traditional/?sort=PTS&amp;dir=-1">
-                          <div class="player-stats__stat-title">PTS</div>
-                          <span class="player-stats__stat-value">29.2</span>
-                      </a><!---->
-                      <!---->
-                      <!---->
-                  </div>
-                  <div class="player-stats__item player-stats__reb n-p [ columns / small-3 ] stats-link" ng-class="{ &#39;stats-link&#39;: availableStats.current }">
-                      <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/traditional/?sort=REB&amp;dir=-1">
-                          <div class="player-stats__stat-title">REB</div>
-                          <span class="player-stats__stat-value">7.8</span>
-                      </a><!---->
-                      <!---->
-                      <!---->
-                  </div>
-                  <div class="player-stats__item player-stats__ast n-p [ columns / small-3 ] stats-link" ng-class="{ &#39;stats-link&#39;: availableStats.current }">
-                      <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/traditional/?sort=AST&amp;dir=-1">
-                          <div class="player-stats__stat-title">AST</div>
-                          <span class="player-stats__stat-value">6.1</span>
-                      </a><!---->
-                      <!---->
-                      <!---->
-                  </div>
-                  <div class="player-stats__item player-stats__pie n-p [ columns / small-3 ] stats-link" ng-class="{ &#39;stats-link&#39;: availableStats.current }">
-                      <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/advanced/?sort=PIE&amp;dir=-1">
-                          <div class="player-stats__stat-title">PIE</div>
-                          <span class="player-stats__stat-value">18.9</span>
-                      </a><!---->
-                      <!---->
-                      <!---->
-                  </div>
-              </div>
-              <div class="player-stats__left n-p [ columns / medium-4 / medium-pull-4 ]">
-                  <div class="player-stats__item player-stats__height n-p stats-link columns small-3 medium-6" ng-class="availableStats.current ? &#39;stats-link columns small-3 medium-6&#39; : &#39;columns small-4&#39;">
-                      <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/bio/?sort=PLAYER_HEIGHT_INCHES&amp;dir=1&amp;CF=PLAYER_HEIGHT_INCHES*E*">
-                          <div class="player-stats__stat-title">HT</div>
-                          <span class="player-stats__stat-value">6-9</span>
-                      </a><!---->
-                      <!---->
-                      <!---->
-                  </div>
-                  <div class="player-stats__item player-stats__weight n-p stats-link columns small-3 medium-6" ng-class="availableStats.current ? &#39;stats-link columns small-3 medium-6&#39; : &#39;columns small-4&#39;">
-                      <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/bio/?sort=PLAYER_WEIGHT&amp;dir=1&amp;CF=PLAYER_WEIGHT*E*240">
-                          <div class="player-stats__stat-title">WT</div>
-                          <span class="player-stats__stat-value">240 <span class="player-stats__lbs">lbs</span></span>
-                      </a><!---->
-                      <!---->
-                      <!---->
-                  </div>
-                  <div class="player-stats__item player-stats__age n-p stats-link columns small-3 medium-6" ng-class="availableStats.current ? &#39;stats-link columns small-3 medium-6&#39; : &#39;hide&#39;">
-                      <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/bio/#!?sort=AGE&amp;dir=1&amp;CF=AGE*E*30">
-                          <div class="player-stats__stat-title">AGE</div>
-                          <span class="player-stats__stat-value">30</span> <!----><span ng-if="playerInfo.AGE_DAYS" class="player-stats__age-days">61d</span><!---->
-                      </a><!---->
-                      <!---->
-                      <!----> <!---->
-                  </div>
-                  <div class="player-stats__item player-stats__birthdate n-p columns small-3 medium-6" ng-class="availableStats.current ? &#39;columns small-3 medium-6&#39; : &#39;columns small-4&#39;">
-                      <div class="player-stats__stat-title">BORN</div>
-                      <span class="player-stats__stat-value">09/29/1988</span>
-                  </div>
-              </div>
-              <div class="player-stats__middle n-p [ columns / medium-4 / medium-pull-4 ]">
-                  <div class="player-stats__item player-stats__prior n-p [ columns / small-6 / medium-12 ]">
-                      <div class="player-stats__stat-title">PRIOR</div>
-                      <span class="player-stats__stat-value">Texas/USA</span>
-                  </div>
-                  <div class="player-stats__item player-stats__draft n-p [ columns / small-6 / medium-8 ] stats-link" ng-class="playerInfo.DRAFT_YEAR != &#39;Undrafted&#39; ? &#39;stats-link&#39; : &#39;&#39;">
-                      <!----><a ng-if="playerInfo.DRAFT_YEAR != &#39;Undrafted&#39;" href="https://stats.nba.com/draft/history/?Season=2007">
-                          <div class="player-stats__stat-title">DRAFT</div>
-                          <span class="player-stats__stat-value">2007 Rnd 1 Pick 2</span>
-                      </a><!---->
-                      <!---->
-                      <!---->
-                  </div>
-                  <div class="player-stats__item player-stats__experience n-p [ columns / medium-4 / hide-for-small-only ]">
-                      <div class="player-stats__stat-title">EXP</div>
-                      <!----><div class="player-stats__stat-value" ng-if="playerInfo.SEASON_EXP!=0">11 <span class="player-stats__exp-yrs">yrs</span></div><!---->
-                      <!---->
-                  </div>
-              </div>
-          </div>
-
           <!---->
       </div>
   </div>
+<img src="KD stat summary placeholder.png" alt="KD stat summary">
 
 </div> <!-- .stats-player-summary -->
     </div>
@@ -1213,7 +1123,8 @@
         <!----><div ng-view=""><div ng-controller="PlayerStatsProfileController" class="stats-splits player-view" data-cat="stats-profile">
 
   <div class="row row5 collapse stats-filters-top">
-    <div class="columns large-1"><div stats-filter-select="" split="splits.SeasonType" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   <label>     <div class="label">Season Type</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="SeasonType" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Preseason" value="object:212">Preseason</option><option label="Regular Season" value="object:211" selected="selected">Regular Season</option><option label="Playoffs" value="object:213">Playoffs</option></select>   </label></div></div></div>
+    <div class="columns large-1 end"><div stats-filter-select="" split="splits.PerMode" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   <label>     <div class="label">Per Mode</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="PerMode" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Totals" value="object:215">Totals</option><option label="Per Game" value="object:214" selected="selected">Per Game</option><option label="Per 100 Poss" value="object:216">Per 100 Poss</option><option label="Per 100 Plays" value="object:217">Per 100 Plays</option><option label="Per 48 Minutes" value="object:218">Per 48 Minutes</option><option label="Per 40 Minutes" value="object:219">Per 40 Minutes</option><option label="Per 36 Minutes" value="object:220">Per 36 Minutes</option><option label="Per 1 Minute" value="object:221">Per 1 Minute</option><option label="Per 1 Poss" value="object:222">Per 1 Poss</option><option label="Per 1 Play" value="object:223">Per 1 Play</option><option label="Minutes Per" value="object:224">Minutes Per</option></select>   </label></div></div></div>
+    <div class="columns large-1"><div stats-filter-select="" split="splits.SeasonType" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   		<label>     <div class="label">Season Type</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="SeasonType" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Preseason" value="object:212">Preseason</option><option label="Regular Season" value="object:211" selected="selected">Regular Season</option><option label="Playoffs" value="object:213">Playoffs</option></select>   </label></div></div></div>
     <div class="columns large-1 end"><div stats-filter-select="" split="splits.PerMode" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   <label>     <div class="label">Per Mode</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="PerMode" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Totals" value="object:215">Totals</option><option label="Per Game" value="object:214" selected="selected">Per Game</option><option label="Per 100 Poss" value="object:216">Per 100 Poss</option><option label="Per 100 Plays" value="object:217">Per 100 Plays</option><option label="Per 48 Minutes" value="object:218">Per 48 Minutes</option><option label="Per 40 Minutes" value="object:219">Per 40 Minutes</option><option label="Per 36 Minutes" value="object:220">Per 36 Minutes</option><option label="Per 1 Minute" value="object:221">Per 1 Minute</option><option label="Per 1 Poss" value="object:222">Per 1 Poss</option><option label="Per 1 Play" value="object:223">Per 1 Play</option><option label="Minutes Per" value="object:224">Minutes Per</option></select>   </label></div></div></div>
   </div>
 
