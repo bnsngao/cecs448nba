@@ -955,72 +955,6 @@
 
 </nav>
 
-      <div class="nav-container" ng-controller="StatsHeaderController" set-class-scroll-top="" data-element-class="nav-container--fixed" data-body-class="nav--fixed">
-
-  <div class="nav-inner" style="position: relative;">
-    <!-- left: inner nav -->
-    <nav class="nav-inner__menu nav-inner__menu--left" role="navigation">
-      <div class="nav-inner__menu-button" ng-click="toggleNav($event)" role="button" tabindex="0">
-        <i class="nav-inner__menu-button-icon [ fa fa-bars fa-lg ]" aria-hidden="true"></i>
-        <img class="nav-inner__logo" src="./NBA.com_Stats _ NBA Stats_files/nba-logoman.svg" alt="NBA.com/Stats Logo" title="NBA.com/Stats">
-        <span class="nav-inner__wordmark">Advanced Stats</span>
-      </div>
-      <div class="nav-inner__menu-item active" ng-class="{ active: activeTab==&#39;home&#39; }"><a href="https://stats.nba.com/">Stats Home</a></div>
-      <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;players&#39; }"><a href="https://stats.nba.com/players/">Players</a></div>
-      <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;teams&#39; }"><a href="https://stats.nba.com/teams/">Teams</a></div>
-      <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;leaders&#39; }"><a href="https://stats.nba.com/players/advanced-leaders/">Advanced</a></div>
-      <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;scores&#39; }"><a href="https://stats.nba.com/scores/">Scores</a></div>
-      <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;schedule&#39; }"><a href="https://stats.nba.com/schedule/">Schedule</a></div>
-      <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;alltime&#39; }"><a href="https://stats.nba.com/alltime/">All Time Leaders</a></div>
-
-    </nav> <!-- .nav-inner__menu -->
-
-
-    <!-- right: search -->
-    <!-- add active class to test active search state -->
-    <div class="nav-inner__search nav-inner__search--right stats-search" ng-class="{ active: showSearch }" ng-controller="StatsSearchController">
-
-  <!-- search icon, always visible -->
-  <div class="stats-search__top">
-    <input class="stats-search__input ng-pristine ng-untouched ng-valid ng-empty ng-hide" type="text" ng-model="search" ng-keydown="onKeyDown($event)" ng-change="onChange($event)" ng-show="showSearch" aria-hidden="true" aria-invalid="false">
-    <a class="stats-search__icon" tabindex="0" ng-click="toggleSearch();" ng-keyup="$event.keyCode == 13 ? toggleSearch() : null">
-      <span class="stats-search__icon-text">Search For A Player or Team</span><i class="[ fa / fa-search ]" aria-hidden="true"></i>
-    </a>
-  </div>
-
-  <div class="stats-search__results ng-hide" ng-show="showResults" aria-hidden="true">
-
-    <div class="stats-search__section stats-search__section--none ng-hide" ng-show="!hasResults &amp;&amp; search.length &gt; 3" aria-hidden="true">
-      <span class="stats-search__no-results">No Results Found</span>
-    </div> <!-- .stats-search__section -->
-
-    <div class="stats-search__section ng-hide" ng-show="searchResults.length" ng-class="{recent: showRecent}" aria-hidden="true">
-
-      <!----><!-- .stats-search__item -->
-
-      <div class="stats-search__show-all">
-        <a class="searchbar__results__link searchbar__results__link--more ng-hide" ng-show="searchResults.length &gt; maxResults" ng-href="/players/list/?s=&amp;Historic=1" href="https://stats.nba.com/players/list/?s=&amp;Historic=1" aria-hidden="true">See More Results</a>
-      </div>
-
-    </div> <!-- .stats-search__section -->
-
-  </div> <!-- .nav-inner__search-results -->
-
-
-</div> <!-- .nav-inner__search -->
-
-
-    <div class="nav-inner__sap-insights [ show-for-sap ]">
-      <a href="https://stats.nba.com/">
-        <img src="./NBA.com_Stats _ NBA Stats_files/sap-insights.svg" alt="Insights From SAP" title="Insights From SAP">
-      </a>
-    </div>
-
-  </div>
-
-
-
-</div>
 
       <div class="stats-container__inner">
 
@@ -1032,18 +966,17 @@
 
   <div class="home__inner">
 
-    <div class="[ columns / large-12 ] ng-hide" ng-show="isLoading" aria-hidden="true">
+    <div class="[ columns / large-12 ] ng-hide" aria-hidden="true">
       <div stats-loader="isLoading"><!----></div>
       <div stats-no-data-msg="noData &amp;&amp; !isLoading"><!----><!----></div>
     </div>
 
     <!-- left: content -->
-    <div class="home [ columns / large-9 ]" ng-hide="isLoading || noData" aria-hidden="false">
+    <div class="home [ columns / large-9 ]" aria-hidden="false">
 
       <!-- daily leaders -->
-      <!----><!----><div ng-if="flags.showDailyLeaders" nba-with="" nba-with-data-players="leaders_daily.players" nba-with-data-teams="leaders_daily.teams" nba-with-data-live="leaders_daily.live" nba-with-date="11/29/2018" nba-with-title="Nightly Leaders" ng-include="" src="&#39;leaders_daily&#39;" id="daily_leaders">
+      <!----><!----><div>
   <div class="home__module / home__leaders">
-
     <div class="home__module-header / home__leaders-header">
 
       <h1 class="header-title">Nightly Leaders</h1>
@@ -1066,18 +999,20 @@
     <div class="home__leaders-body [ row / collapsed ]">
 
       <!-- players -->
-      <!----><section class="home__leaders-category [ columns / large-4 ]" ng-repeat="category in players.items" ng-show="isPlayersDaily" aria-hidden="false">
+       	  	<img src="stats placeholder.png" alt="stats">
+
+      <!----><section class="home__leaders-category [ columns / large-4 ]" ng-repeat="category in players.items" aria-hidden="false">
 
         <!-- daily leaders header -->
         <div class="category-header">
           <h2 class="category-header__name">
-            <!----><a id="leaders_daily_players__PTS" ng-if="!live" ng-href="/players/traditional/?DateFrom=11/29/2018&amp;DateTo=11/29/2018&amp;PerMode=Totals&amp;sort=PTS&amp;dir=-1" title="View All Points" href="https://stats.nba.com/players/traditional/?DateFrom=11/29/2018&amp;DateTo=11/29/2018&amp;PerMode=Totals&amp;sort=PTS&amp;dir=-1">
+            <!----><a id="leaders_daily_players__PTS" ng-href="/players/traditional/?DateFrom=11/29/2018&amp;DateTo=11/29/2018&amp;PerMode=Totals&amp;sort=PTS&amp;dir=-1" title="View All Points" href="https://stats.nba.com/players/traditional/?DateFrom=11/29/2018&amp;DateTo=11/29/2018&amp;PerMode=Totals&amp;sort=PTS&amp;dir=-1">
               Points
             </a><!---->
             <!---->
           </h2>
           <div class="category-header__share">
-            <!----><a ng-if="!live" ng-href="/players/traditional/?DateFrom=11/29/2018&amp;DateTo=11/29/2018&amp;PerMode=Totals&amp;sort=PTS&amp;dir=-1" title="View All Points" href="https://stats.nba.com/players/traditional/?DateFrom=11/29/2018&amp;DateTo=11/29/2018&amp;PerMode=Totals&amp;sort=PTS&amp;dir=-1">
+            <!----><a ng-href="/players/traditional/?DateFrom=11/29/2018&amp;DateTo=11/29/2018&amp;PerMode=Totals&amp;sort=PTS&amp;dir=-1" title="View All Points" href="https://stats.nba.com/players/traditional/?DateFrom=11/29/2018&amp;DateTo=11/29/2018&amp;PerMode=Totals&amp;sort=PTS&amp;dir=-1">
               <i class="fa fa-share" aria-hidden="true"></i>
             </a><!---->
           </div>
@@ -4553,7 +4488,7 @@ The LA Clippers sitting atop the West standings is one of the biggest surprises 
 
 
     <!-- right: sidebar -->
-    <div class="inner__sidebar [ columns / large-3 ]" ng-hide="isLoading || noData" aria-hidden="false">
+    <div class="inner__sidebar [ columns / large-3 ]"  aria-hidden="false">
 
       <div class="sidebar-promo sidebar-promo--daily-lineups">
         <a href="https://stats.nba.com/lineups/">Daily Lineups</a>
@@ -4576,7 +4511,7 @@ The LA Clippers sitting atop the West standings is one of the biggest surprises 
         <h1 class="sidebar-header">Jump To</h1>
 
         <div class="sidebar-module / sidebar__index">
-          <!----><div ng-if="flags.showDailyLeaders">
+          <!----><div>
             <a tabindex="0" class="sidebar__index-title" ng-click="scrollTo(&#39;daily_leaders&#39;)" title="Jump to Daily Leaders">Daily Leaders</a>
           </div><!---->
           <!-- <div>
@@ -4585,7 +4520,7 @@ The LA Clippers sitting atop the West standings is one of the biggest surprises 
           <div>
             <a tabindex="0" class="sidebar__index-title" href='/fantasyranking/' title="View Fantasy Cumulative Ranking">Fantasy Cumulative Ranking</a>
           </div> -->
-          <!----><div ng-if="flags.showHomepageLinks">
+          <!----><div>
             <a tabindex="0" class="sidebar__index-title" ng-click="scrollTo(&#39;hp_link-container&#39;)" ng-keyup="$event.keyCode == 13 ? scrollTo(&#39;hp_link-container&#39;) : null" title="Jump to Stats Features">NBA.com/Stats Features</a>
           </div><!---->
           <div>
@@ -4609,6 +4544,9 @@ The LA Clippers sitting atop the West standings is one of the biggest surprises 
           <!----><div ng-if="flags.showAssistTracker">
             <a tabindex="0" class="sidebar__index-title" ng-click="scrollTo(&#39;assist_tracker-container&#39;)" ng-keyup="$event.keyCode == 13 ? scrollTo(&#39;assist_tracker-container&#39;) : null" title="Jump to State Farm Assist Tracker">Assist Tracker</a>
           </div><!---->
+          <div>
+            <a tabindex="0" class="sidebar__index-title" ng-click="scrollTo(&#39;player_news-container&#39;)" ng-keyup="$event.keyCode == 13 ? scrollTo(&#39;player_news-container&#39;) : null" title="Jump to Player News">All Time Leaders</a>
+          </div>      
         </div>
       </div>
 
@@ -4625,7 +4563,7 @@ The LA Clippers sitting atop the West standings is one of the biggest surprises 
             <a ng-href="/player/203954/" title="View Stats Profile" href="https://stats.nba.com/player/203954/">Joel Embiid</a>
           </td>
           <!---->
-          <!----><td class="sidebar__leaders-table__value" ng-if="!player.GAME_ID">644</td><!---->
+          <!----><td class="sidebar__leaders-table__value" >644</td><!---->
         </tr><!----><!----><!----><tr ng-if="stat.playerstats" ng-repeat="player in stat.playerstats | limitTo:3">
           <td class="sidebar__leaders-table__text">
             <a ng-href="/player/201142/" title="View Stats Profile" href="https://stats.nba.com/player/201142/">Kevin Durant</a>
@@ -5518,53 +5456,10 @@ The LA Clippers sitting atop the West standings is one of the biggest surprises 
 
     <div class="home__leaders-body [ row / collapsed ]">
 
-      <!-- players -->
-      <section class="home__leaders-category [ columns / large-4 ]" ng-repeat="category in players.items" ng-show="isPlayersDaily">
 
-        <!-- daily leaders header -->
-        <div class="category-header">
-          <h2 class="category-header__name">
-            <a id="leaders_daily_players__{{ ::category.name }}" ng-if="!live" ng-href="/players/traditional/?DateFrom={{ ::category.gamedate }}&DateTo={{ ::category.gamedate }}&PerMode=Totals&sort={{ ::category.name }}&dir=-1" title="View All {{category.title}}">
-              {{::category.title}}
-            </a>
-            <span ng-if="live">
-              {{::category.title}}
-            </span>
-          </h2>
-          <div class="category-header__share">
-            <a ng-if="!live" ng-href="/players/traditional/?DateFrom={{ ::category.gamedate }}&DateTo={{ ::category.gamedate }}&PerMode=Totals&sort={{ ::category.name }}&dir=-1" title="View All {{category.title}}">
-              <i class="fa fa-share" aria-hidden="true"></i>
-            </a>
-          </div>
-          <div class="clear"></div>
-        </div>
-
-        <div class="category-body">
-          <table class="category-table">
-            <tbody>
-              <tr ng-repeat="player in category.playerstats">
-                <td class="category-table__rank" ng-if="player.RANK">{{::player.RANK}}.</td>
-                <td class="category-table__rank" ng-if="!player.RANK">{{::player.rank}}.</td>
-                <td class="category-table__text">
-                  <a ng-href="/player/{{::player.PLAYER_ID}}/" title="View Stats Profile" aria-labelledby="leaders_daily_players__{{ ::category.name }}">{{::player.PLAYER_NAME}}</a>
-                  <span>{{::player.TEAM_ABBREVIATION}}</span>
-                </td>
-                <td class="category-table__value" ng-if="!player.GAME_ID">
-                  {{::player[category.name] | statNumber:category.permode:category.name}}
-                </td>
-                <td class="category-table__value" ng-if="player.GAME_ID">
-                  <a ng-href="/game/{{::player.GAME_ID}}/" title="View Box Score">
-                    {{::player[category.name] | statNumber:category.permode:category.name}}
-                  </a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
 
       <!-- teams -->
-      <section class="home__leaders-category [ columns / large-4 ]" ng-repeat="category in teams.items" ng-show="isTeamsDaily">
+      <section class="home__leaders-category [ columns / large-4 ]" ng-repeat="category in teams.items">
 
         <!-- daily leaders header -->
         <div class="category-header">
@@ -5666,7 +5561,7 @@ The LA Clippers sitting atop the West standings is one of the biggest surprises 
     <div class="home__leaders-body [ row / collapsed ]">
 
       <!-- players -->
-      <section class="home__leaders-category [ columns / large-4 ]" ng-repeat="category in players.items" ng-show="isPlayers">
+      <section class="home__leaders-category [ columns / large-4 ]" ng-repeat="category in players.items">
 
         <!-- season leaders header -->
         <div class="category-header">
