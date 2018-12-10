@@ -2051,26 +2051,6 @@
 
                                 <nav class="tertiary-nav">
 
-                                    <section class="tertiary-nav-component">
-                                        <div class="toggle-nav-component__button" ng-click="showBeta=!showBeta; showGamma=false;" role="button" tabindex="0">
-                                            <a href="https://stats.nba.com/player/201142/" ng-class="{ active: showBeta }">Profile</a>
-                                        </div>
-                                        <ul class="tertiary-nav-component__dropdown ng-hide" ng-show="showBeta" aria-hidden="true">
-                                            <li ng-show="sections.stats" aria-hidden="false"><a data-type-beta="stats-profile" ng-href="/player/201142/" href="https://stats.nba.com/player/201142/"><span>Profile</span></a></li>
-                                            <li ng-show="sections.stats" aria-hidden="false"><a data-type-beta="splits" ng-href="/player/201142/traditional" href="https://stats.nba.com/player/201142/traditional"><span>Splits</span></a></li>
-                                            <!-- <li ng-show="sections.current"><a data-type-beta="news" ng-href="/player/{{ routeId }}/news"><span>News</span></a></li> -->
-                                            <!-- <li ng-show="sections.current"><a data-type-beta="fantasy" ng-href="/player/{{ routeId }}/fantasy"><span>Fantasy</span></a></li> -->
-                                            <li><a data-type-beta="career" ng-href="/player/201142/career" href="https://stats.nba.com/player/201142/career"><span>Career</span></a></li>
-
-                                            <li ng-show="sections.boxscores &amp;&amp; sections.boxscoreFlag&gt;=2" aria-hidden="true" class="ng-hide"><a data-type-beta="boxscores" ng-href="/player/201142/boxscores" href="https://stats.nba.com/player/201142/boxscores"><span>Box Scores</span></a></li>
-                                            <li ng-show="sections.boxscores &amp;&amp; sections.boxscoreFlag&lt;=2" aria-hidden="false"><a data-type-beta="adv-boxscores" ng-href="/player/201142/boxscores-traditional" href="https://stats.nba.com/player/201142/boxscores-traditional"><span>Advanced Box Scores</span></a></li>
-
-                                            <li ng-show="sections.tracking" aria-hidden="false"><a data-type-beta="tracking" ng-href="/player/201142/shots-dash" href="https://stats.nba.com/player/201142/shots-dash"><span>Tracking</span></a></li>
-
-                                            <li ng-show="sections.matchups" aria-hidden="false"><a data-type-beta="matchups" ng-href="/player/201142/matchups/" href="https://stats.nba.com/player/201142/matchups/"><span>Matchups</span></a></li>
-                                        </ul>
-                                    </section>
-
                                     <section class="tertiary-nav-component ng-hide" ng-show="beta===&#39;splits&#39;" aria-hidden="true">
                                         <div class="toggle-nav-component__button" ng-click="showGamma=!showGamma; showBeta=false;" role="button" tabindex="0">
                                             <a href="https://stats.nba.com/player/201142/" ng-class="{ active: showGamma }"></a>
@@ -2110,12 +2090,6 @@
                                         </ul>
                                     </section>
 
-                                    <section class="tertiary-nav-component">
-                                        <div class="toggle-nav-component__caret">
-                                            <i class="fa fa-caret-down" aria-hidden="true"></i>
-                                        </div>
-                                    </section>
-
                                 </nav>
 
                                 <section class="columns / small-12 / tertiary-nav-overlay" ng-class="{ active: showBeta || showGamma }"></section>
@@ -2129,7 +2103,23 @@
                                         <div class="columns large-1">
                                             <div stats-filter-select="" split="splits.SeasonType" autorun="true" class="stats-filter-select">
                                                 <div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}"> <label>
-                                                        <div class="label">Season Type</div>
+                                                        <div class="label">Profile &#9660</div>
+                                                        <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div> <select name="SeasonType" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false">
+                                                            <option label="Profile" selected="selected">Profile</option>
+                                                            <option label="Splits">Splits</option>
+                                                            <option label="Career">Career</option>
+                                                            <option label="Advanced Box Scores">Advanced Box Scores</option>
+                                                            <option label="Tracking">Tracking</option>
+                                                            <option label="Matchups">Matchups</option>
+                                                            <option label="Bio">Bio</option>
+                                                        </select>
+                                                    </label></div>
+                                            </div>
+                                        </div>
+                                        <div class="columns large-1">
+                                            <div stats-filter-select="" split="splits.SeasonType" autorun="true" class="stats-filter-select">
+                                                <div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}"> <label>
+                                                        <div class="label">Season Type &#9660</div>
                                                         <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div> <select name="SeasonType" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false">
                                                             <option label="Preseason" value="object:212">Preseason</option>
                                                             <option label="Regular Season" value="object:211" selected="selected">Regular Season</option>
@@ -2141,7 +2131,7 @@
                                         <div class="columns large-1 end">
                                             <div stats-filter-select="" split="splits.PerMode" autorun="true" class="stats-filter-select">
                                                 <div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}"> <label>
-                                                        <div class="label">Per Mode</div>
+                                                        <div class="label">Per Mode &#9660</div>
                                                         <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div> <select name="PerMode" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false">
                                                             <option label="Totals" value="object:215">Totals</option>
                                                             <option label="Per Game" value="object:214" selected="selected">Per Game</option>
@@ -2940,13 +2930,6 @@
 
 
 
-
-
-
-
-<<<<<<< HEAD
-
-=======
     <div>
       <div class="summary">
   <div class="row player-summary">
@@ -3072,18 +3055,20 @@
 </nav-dropdown>
         <!----><div ng-view=""><div ng-controller="PlayerStatsProfileController" class="stats-splits player-view" data-cat="stats-profile">
 
-  <div class="row row5 collapse stats-filters-top">
-    <div class="columns large-1 end"><div stats-filter-select="" split="splits.PerMode" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   <label>     <div class="label">Per Mode</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="PerMode" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Totals" value="object:215">Totals</option><option label="Per Game" value="object:214" selected="selected">Per Game</option><option label="Per 100 Poss" value="object:216">Per 100 Poss</option><option label="Per 100 Plays" value="object:217">Per 100 Plays</option><option label="Per 48 Minutes" value="object:218">Per 48 Minutes</option><option label="Per 40 Minutes" value="object:219">Per 40 Minutes</option><option label="Per 36 Minutes" value="object:220">Per 36 Minutes</option><option label="Per 1 Minute" value="object:221">Per 1 Minute</option><option label="Per 1 Poss" value="object:222">Per 1 Poss</option><option label="Per 1 Play" value="object:223">Per 1 Play</option><option label="Minutes Per" value="object:224">Minutes Per</option></select>   </label></div></div></div>
-    <div class="columns large-1"><div stats-filter-select="" split="splits.SeasonType" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   		<label>     <div class="label">Season Type</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="SeasonType" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Preseason" value="object:212">Preseason</option><option label="Regular Season" value="object:211" selected="selected">Regular Season</option><option label="Playoffs" value="object:213">Playoffs</option></select>   </label></div></div></div>
-    <div class="columns large-1 end"><div stats-filter-select="" split="splits.PerMode" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   <label>     <div class="label">Per Mode</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="PerMode" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Totals" value="object:215">Totals</option><option label="Per Game" value="object:214" selected="selected">Per Game</option><option label="Per 100 Poss" value="object:216">Per 100 Poss</option><option label="Per 100 Plays" value="object:217">Per 100 Plays</option><option label="Per 48 Minutes" value="object:218">Per 48 Minutes</option><option label="Per 40 Minutes" value="object:219">Per 40 Minutes</option><option label="Per 36 Minutes" value="object:220">Per 36 Minutes</option><option label="Per 1 Minute" value="object:221">Per 1 Minute</option><option label="Per 1 Poss" value="object:222">Per 1 Poss</option><option label="Per 1 Play" value="object:223">Per 1 Play</option><option label="Minutes Per" value="object:224">Minutes Per</option></select>   </label></div></div></div>
+<div class="dropdown">
+  <button class="dropbtn">Dropdown</button>
+  <div class="dropdown-content">
+    <a href="#">Link 1</a>
+    <a href="#">Link 2</a>
+    <a href="#">Link 3</a>
   </div>
+</div>
 
   <div class="stats-filters-advanced ng-hide" ng-show="showSplits" aria-hidden="true">
     <div class="stats-filters-advanced__bottom">
       <stats-run-it><a href="https://stats.nba.com/player/201142/" class="run-it" ripple="" ng-click="runit();">Run It</a></stats-run-it>
     </div>
   </div>
->>>>>>> master
 
 
                                                         </tr>
