@@ -832,12 +832,6 @@
 </head>
 
 <body class="has-sap-sponser">
-
-    <header id="header-ad">
-        <div id="ad_bnr_atf_02"></div>
-        <div id="ad_mod_92f78ded2"></div>
-    </header>
-
     <div class="[ show-for-large ] turner-nav">
         <script>
             function getTChannelName() {
@@ -1973,73 +1967,7 @@
 
         </nav>
 
-        <div class="nav-container" ng-controller="StatsHeaderController" set-class-scroll-top="" data-element-class="nav-container--fixed" data-body-class="nav--fixed">
-
-            <div class="nav-inner" style="position: relative;">
-                <!-- left: inner nav -->
-                <nav class="nav-inner__menu nav-inner__menu--left" role="navigation">
-                    <div class="nav-inner__menu-button" ng-click="toggleNav($event)" role="button" tabindex="0">
-                        <i class="nav-inner__menu-button-icon [ fa fa-bars fa-lg ]" aria-hidden="true"></i>
-                        <img class="nav-inner__logo" src="./NBA.com_Stats _ Kevin Durant_files/nba-logoman.svg" alt="NBA.com/Stats Logo" title="NBA.com/Stats">
-                        <span class="nav-inner__wordmark">Advanced Stats</span>
-                    </div>
-                    <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;home&#39; }"><a href="https://stats.nba.com/">Stats Home</a></div>
-                    <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;players&#39; }"><a href="https://stats.nba.com/players/">Players</a></div>
-                    <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;teams&#39; }"><a href="https://stats.nba.com/teams/">Teams</a></div>
-                    <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;leaders&#39; }"><a href="https://stats.nba.com/players/advanced-leaders/">Advanced</a></div>
-                    <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;scores&#39; }"><a href="https://stats.nba.com/scores/">Scores</a></div>
-                    <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;schedule&#39; }"><a href="https://stats.nba.com/schedule/">Schedule</a></div>
-                    <div class="nav-inner__menu-item" ng-class="{ active: activeTab==&#39;alltime&#39; }"><a href="https://stats.nba.com/alltime/">All Time Leaders</a></div>
-
-                </nav> <!-- .nav-inner__menu -->
-
-
-                <!-- right: search -->
-                <!-- add active class to test active search state -->
-                <div class="nav-inner__search nav-inner__search--right stats-search" ng-class="{ active: showSearch }" ng-controller="StatsSearchController">
-
-                    <!-- search icon, always visible -->
-                    <div class="stats-search__top">
-                        <input class="stats-search__input ng-pristine ng-untouched ng-valid ng-empty ng-hide" type="text" ng-model="search" ng-keydown="onKeyDown($event)" ng-change="onChange($event)" ng-show="showSearch" aria-hidden="true" aria-invalid="false">
-                        <a class="stats-search__icon" tabindex="0" ng-click="toggleSearch();" ng-keyup="$event.keyCode == 13 ? toggleSearch() : null">
-                            <span class="stats-search__icon-text">Search For A Player or Team</span><i class="[ fa / fa-search ]" aria-hidden="true"></i>
-                        </a>
-                    </div>
-
-                    <div class="stats-search__results ng-hide" ng-show="showResults" aria-hidden="true">
-
-                        <div class="stats-search__section stats-search__section--none ng-hide" ng-show="!hasResults &amp;&amp; search.length &gt; 3" aria-hidden="true">
-                            <span class="stats-search__no-results">No Results Found</span>
-                        </div> <!-- .stats-search__section -->
-
-                        <div class="stats-search__section ng-hide" ng-show="searchResults.length" ng-class="{recent: showRecent}" aria-hidden="true">
-
-                            <!---->
-                            <!-- .stats-search__item -->
-
-                            <div class="stats-search__show-all">
-                                <a class="searchbar__results__link searchbar__results__link--more ng-hide" ng-show="searchResults.length &gt; maxResults" ng-href="/players/list/?s=&amp;Historic=1" href="https://stats.nba.com/players/list/?s=&amp;Historic=1" aria-hidden="true">See More Results</a>
-                            </div>
-
-                        </div> <!-- .stats-search__section -->
-
-                    </div> <!-- .nav-inner__search-results -->
-
-
-                </div> <!-- .nav-inner__search -->
-
-
-                <div class="nav-inner__sap-insights [ show-for-sap ]">
-                    <a href="https://stats.nba.com/player/201142/">
-                        <img src="./NBA.com_Stats _ Kevin Durant_files/sap-insights.svg" alt="Insights From SAP" title="Insights From SAP">
-                    </a>
-                </div>
-
-            </div>
-
-
-
-        </div>
+        <br>
 
         <div class="stats-container__inner">
 
@@ -2109,107 +2037,9 @@
                                         </div>
                                     </div>
 
-                                    <div class="player-stats n-p [ columns / small-12 ]">
-                                        <div class="player-stats__right n-p [ columns / medium-4 / medium-push-8 ]">
-                                            <div class="player-stats__item player-stats__pts n-p [ columns / small-3 ] stats-link" ng-class="{ &#39;stats-link&#39;: availableStats.current }">
-                                                <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/traditional/?sort=PTS&amp;dir=-1">
-                                                    <div class="player-stats__stat-title">PTS</div>
-                                                    <span class="player-stats__stat-value">29.2</span>
-                                                </a>
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                            <div class="player-stats__item player-stats__reb n-p [ columns / small-3 ] stats-link" ng-class="{ &#39;stats-link&#39;: availableStats.current }">
-                                                <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/traditional/?sort=REB&amp;dir=-1">
-                                                    <div class="player-stats__stat-title">REB</div>
-                                                    <span class="player-stats__stat-value">7.8</span>
-                                                </a>
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                            <div class="player-stats__item player-stats__ast n-p [ columns / small-3 ] stats-link" ng-class="{ &#39;stats-link&#39;: availableStats.current }">
-                                                <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/traditional/?sort=AST&amp;dir=-1">
-                                                    <div class="player-stats__stat-title">AST</div>
-                                                    <span class="player-stats__stat-value">6.1</span>
-                                                </a>
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                            <div class="player-stats__item player-stats__pie n-p [ columns / small-3 ] stats-link" ng-class="{ &#39;stats-link&#39;: availableStats.current }">
-                                                <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/advanced/?sort=PIE&amp;dir=-1">
-                                                    <div class="player-stats__stat-title">PIE</div>
-                                                    <span class="player-stats__stat-value">18.9</span>
-                                                </a>
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                        </div>
-                                        <div class="player-stats__left n-p [ columns / medium-4 / medium-pull-4 ]">
-                                            <div class="player-stats__item player-stats__height n-p stats-link columns small-3 medium-6" ng-class="availableStats.current ? &#39;stats-link columns small-3 medium-6&#39; : &#39;columns small-4&#39;">
-                                                <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/bio/?sort=PLAYER_HEIGHT_INCHES&amp;dir=1&amp;CF=PLAYER_HEIGHT_INCHES*E*">
-                                                    <div class="player-stats__stat-title">HT</div>
-                                                    <span class="player-stats__stat-value">6-9</span>
-                                                </a>
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                            <div class="player-stats__item player-stats__weight n-p stats-link columns small-3 medium-6" ng-class="availableStats.current ? &#39;stats-link columns small-3 medium-6&#39; : &#39;columns small-4&#39;">
-                                                <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/bio/?sort=PLAYER_WEIGHT&amp;dir=1&amp;CF=PLAYER_WEIGHT*E*240">
-                                                    <div class="player-stats__stat-title">WT</div>
-                                                    <span class="player-stats__stat-value">240 <span class="player-stats__lbs">lbs</span></span>
-                                                </a>
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                            <div class="player-stats__item player-stats__age n-p stats-link columns small-3 medium-6" ng-class="availableStats.current ? &#39;stats-link columns small-3 medium-6&#39; : &#39;hide&#39;">
-                                                <!----><a ng-if="availableStats.current" href="https://stats.nba.com/players/bio/#!?sort=AGE&amp;dir=1&amp;CF=AGE*E*30">
-                                                    <div class="player-stats__stat-title">AGE</div>
-                                                    <span class="player-stats__stat-value">30</span>
-                                                    <!----><span ng-if="playerInfo.AGE_DAYS" class="player-stats__age-days">61d</span>
-                                                    <!---->
-                                                </a>
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                            <div class="player-stats__item player-stats__birthdate n-p columns small-3 medium-6" ng-class="availableStats.current ? &#39;columns small-3 medium-6&#39; : &#39;columns small-4&#39;">
-                                                <div class="player-stats__stat-title">BORN</div>
-                                                <span class="player-stats__stat-value">09/29/1988</span>
-                                            </div>
-                                        </div>
-                                        <div class="player-stats__middle n-p [ columns / medium-4 / medium-pull-4 ]">
-                                            <div class="player-stats__item player-stats__prior n-p [ columns / small-6 / medium-12 ]">
-                                                <div class="player-stats__stat-title">PRIOR</div>
-                                                <span class="player-stats__stat-value">Texas/USA</span>
-                                            </div>
-                                            <div class="player-stats__item player-stats__draft n-p [ columns / small-6 / medium-8 ] stats-link" ng-class="playerInfo.DRAFT_YEAR != &#39;Undrafted&#39; ? &#39;stats-link&#39; : &#39;&#39;">
-                                                <!----><a ng-if="playerInfo.DRAFT_YEAR != &#39;Undrafted&#39;" href="https://stats.nba.com/draft/history/?Season=2007">
-                                                    <div class="player-stats__stat-title">DRAFT</div>
-                                                    <span class="player-stats__stat-value">2007 Rnd 1 Pick 2</span>
-                                                </a>
-                                                <!---->
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                            <div class="player-stats__item player-stats__experience n-p [ columns / medium-4 / hide-for-small-only ]">
-                                                <div class="player-stats__stat-title">EXP</div>
-                                                <!---->
-                                                <div class="player-stats__stat-value" ng-if="playerInfo.SEASON_EXP!=0">11 <span class="player-stats__exp-yrs">yrs</span></div>
-                                                <!---->
-                                                <!---->
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     <!---->
                                 </div>
+                                <img src="KD stat summary placeholder.png" alt="KD stat summary">
                             </div>
 
                         </div> <!-- .stats-player-summary -->
@@ -3114,7 +2944,146 @@
 
 
 
+<<<<<<< HEAD
 
+=======
+    <div>
+      <div class="summary">
+  <div class="row player-summary">
+      <div class="[ small-12 / columns ]" style="position: relative;">
+
+          <div class="summary__container team-color-gradient GSW n-p [ small-12 / columns ]">
+            <!---->
+
+              <div class="player-summary__inner">
+
+                  <div class="player-summary__image-block">
+                     <img player-headshot="" player-id="201142" team-id="1610612744" season="2018" class="player-img" src="./NBA.com_Stats _ Kevin Durant_files/201142.png" alt="Kevin Durant" title="Kevin Durant">
+                  </div>
+
+                  <div class="player-summary__info">
+                      <a ng-href="/team/1610612744/" class="player-summary__team-logo" href="https://stats.nba.com/team/1610612744/">
+                        <img team-logo="" abbr="GSW" class="team-img" type="image/svg+xml" src="./NBA.com_Stats _ Kevin Durant_files/GSW_logo.svg" alt="Golden State Warriors logo" title="Golden State Warriors logo">
+                      </a>
+                      <div class="player-summary__text">
+                          <div class="player-summary__text-top">
+                              <!----><span ng-if="playerInfo.JERSEY" class="player-summary__player-number"><span class="player-summary__hash">#</span>35</span><!---->
+                              <div class="player-summary__player-name">
+                                  <p class="player-summary__first-name">Kevin</p>
+                                  <p class="player-summary__last-name">Durant</p>
+                              </div>
+                          </div>
+                          <div class="player-summary__text-bottom">
+                              <span class="player-summary__player-pos">F</span>
+                              <a ng-href="/team/1610612744/" href="https://stats.nba.com/team/1610612744/"><span class="player-summary__team-name">Golden State Warriors</span></a>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="player-summary__right-links">
+                      <!---->
+                      <a ng-href="/vs/#!/?PlayerID=201142" href="https://stats.nba.com/vs/#!/?PlayerID=201142">Compare Player</a>
+                  </div>
+              </div>
+          </div>
+
+          <!---->
+      </div>
+  </div>
+<img src="KD stat summary placeholder.png" alt="KD stat summary">
+
+</div> <!-- .stats-player-summary -->
+    </div>
+
+    <div class="row">
+      <div class="columns / small-12 / section-view-overlay">
+        <nav-dropdown data-alpha="player" data-beta="stats-profile" data-gamma="" data-route-id="201142" data-sections="availableStats">
+
+  <nav class="tertiary-nav">
+
+    <section class="tertiary-nav-component">
+      <div class="toggle-nav-component__button" ng-click="showBeta=!showBeta; showGamma=false;" role="button" tabindex="0">
+        <a href="https://stats.nba.com/player/201142/" ng-class="{ active: showBeta }">Profile</a>
+      </div>
+      <ul class="tertiary-nav-component__dropdown ng-hide" ng-show="showBeta" aria-hidden="true">
+        <li ng-show="sections.stats" aria-hidden="false"><a data-type-beta="stats-profile" ng-href="/player/201142/" href="https://stats.nba.com/player/201142/"><span>Profile</span></a></li>
+        <li ng-show="sections.stats" aria-hidden="false"><a data-type-beta="splits" ng-href="/player/201142/traditional" href="https://stats.nba.com/player/201142/traditional"><span>Splits</span></a></li>
+        <!-- <li ng-show="sections.current"><a data-type-beta="news" ng-href="/player/{{ routeId }}/news"><span>News</span></a></li> -->
+        <!-- <li ng-show="sections.current"><a data-type-beta="fantasy" ng-href="/player/{{ routeId }}/fantasy"><span>Fantasy</span></a></li> -->
+        <li><a data-type-beta="career" ng-href="/player/201142/career" href="https://stats.nba.com/player/201142/career"><span>Career</span></a></li>
+
+        <li ng-show="sections.boxscores &amp;&amp; sections.boxscoreFlag&gt;=2" aria-hidden="true" class="ng-hide"><a data-type-beta="boxscores" ng-href="/player/201142/boxscores" href="https://stats.nba.com/player/201142/boxscores"><span>Box Scores</span></a></li>
+        <li ng-show="sections.boxscores &amp;&amp; sections.boxscoreFlag&lt;=2" aria-hidden="false"><a data-type-beta="adv-boxscores" ng-href="/player/201142/boxscores-traditional" href="https://stats.nba.com/player/201142/boxscores-traditional"><span>Advanced Box Scores</span></a></li>
+
+        <li ng-show="sections.tracking" aria-hidden="false"><a data-type-beta="tracking" ng-href="/player/201142/shots-dash" href="https://stats.nba.com/player/201142/shots-dash"><span>Tracking</span></a></li>
+
+        <li ng-show="sections.matchups" aria-hidden="false"><a data-type-beta="matchups" ng-href="/player/201142/matchups/" href="https://stats.nba.com/player/201142/matchups/"><span>Matchups</span></a></li>
+      </ul>
+    </section>
+
+    <section class="tertiary-nav-component ng-hide" ng-show="beta===&#39;splits&#39;" aria-hidden="true">
+      <div class="toggle-nav-component__button" ng-click="showGamma=!showGamma; showBeta=false;" role="button" tabindex="0">
+        <a href="https://stats.nba.com/player/201142/" ng-class="{ active: showGamma }"></a>
+      </div>
+      <ul class="tertiary-nav-component__dropdown ng-hide" ng-show="showGamma" aria-hidden="true">
+        <li><a data-type-gamma="traditional" ng-href="/player/201142/traditional" href="https://stats.nba.com/player/201142/traditional"><span>Traditional</span></a></li>
+        <li><a data-type-gamma="advanced" ng-href="/player/201142/advanced" href="https://stats.nba.com/player/201142/advanced"><span>Advanced</span></a></li>
+        <li><a data-type-gamma="misc" ng-href="/player/201142/misc" href="https://stats.nba.com/player/201142/misc"><span>Misc</span></a></li>
+        <li><a data-type-gamma="scoring" ng-href="/player/201142/scoring" href="https://stats.nba.com/player/201142/scoring"><span>Scoring</span></a></li>
+        <li><a data-type-gamma="usage" ng-href="/player/201142/usage" href="https://stats.nba.com/player/201142/usage"><span>Usage</span></a></li>
+        <li><a data-type-gamma="shooting" ng-href="/player/201142/shooting" href="https://stats.nba.com/player/201142/shooting"><span>Shooting</span></a></li>
+      </ul>
+    </section>
+
+    <section class="tertiary-nav-component ng-hide" ng-show="beta===&#39;tracking&#39;" aria-hidden="true">
+      <div class="toggle-nav-component__button" ng-click="showGamma=!showGamma; showBeta=false;" role="button" tabindex="0">
+        <a href="https://stats.nba.com/player/201142/" ng-class="{ active: showGamma }"></a>
+      </div>
+      <ul class="tertiary-nav-component__dropdown ng-hide" ng-show="showGamma" aria-hidden="true">
+        <li><a data-type-gamma="shot-dash" ng-href="/player/201142/shots-dash" href="https://stats.nba.com/player/201142/shots-dash"><span>Shots Dashboard</span></a></li>
+        <li><a data-type-gamma="reb-dash" ng-href="/player/201142/rebounds-dash" href="https://stats.nba.com/player/201142/rebounds-dash"><span>Rebounds Dashboard</span></a></li>
+        <li><a data-type-gamma="passes-dash" ng-href="/player/201142/passes-dash" href="https://stats.nba.com/player/201142/passes-dash"><span>Passes Dashboard</span></a></li>
+        <li><a data-type-gamma="def-dash" ng-href="/player/201142/defense-dash" href="https://stats.nba.com/player/201142/defense-dash"><span>Defense Dashboard</span></a></li>
+      </ul>
+    </section>
+
+    <section class="tertiary-nav-component ng-hide" ng-show="beta===&#39;adv-boxscores&#39;" aria-hidden="true">
+      <div class="toggle-nav-component__button" ng-click="showGamma=!showGamma;showBeta=false;" role="button" tabindex="0">
+        <a href="https://stats.nba.com/player/201142/" ng-class="{ active: showGamma }"></a>
+      </div>
+      <ul class="tertiary-nav-component__dropdown ng-hide" ng-show="showGamma" aria-hidden="true">
+        <li><a data-type-gamma="traditional" ng-href="/player/201142/boxscores-traditional" href="https://stats.nba.com/player/201142/boxscores-traditional"><span>Traditional</span></a></li>
+        <li><a data-type-gamma="advanced" ng-href="/player/201142/boxscores-advanced" href="https://stats.nba.com/player/201142/boxscores-advanced"><span>Advanced</span></a></li>
+        <li><a data-type-gamma="misc" ng-href="/player/201142/boxscores-misc" href="https://stats.nba.com/player/201142/boxscores-misc"><span>Misc</span></a></li>
+        <li><a data-type-gamma="scoring" ng-href="/player/201142/boxscores-scoring" href="https://stats.nba.com/player/201142/boxscores-scoring"><span>Scoring</span></a></li>
+        <li><a data-type-gamma="usage" ng-href="/player/201142/boxscores-usage" href="https://stats.nba.com/player/201142/boxscores-usage"><span>Usage</span></a></li>
+      </ul>
+    </section>
+
+    <section class="tertiary-nav-component">
+      <div class="toggle-nav-component__caret">
+        <i class="fa fa-caret-down" aria-hidden="true"></i>
+      </div>
+    </section>
+
+  </nav>
+
+  <section class="columns / small-12 / tertiary-nav-overlay" ng-class="{ active: showBeta || showGamma }"></section>
+
+</nav-dropdown>
+        <!----><div ng-view=""><div ng-controller="PlayerStatsProfileController" class="stats-splits player-view" data-cat="stats-profile">
+
+  <div class="row row5 collapse stats-filters-top">
+    <div class="columns large-1 end"><div stats-filter-select="" split="splits.PerMode" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   <label>     <div class="label">Per Mode</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="PerMode" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Totals" value="object:215">Totals</option><option label="Per Game" value="object:214" selected="selected">Per Game</option><option label="Per 100 Poss" value="object:216">Per 100 Poss</option><option label="Per 100 Plays" value="object:217">Per 100 Plays</option><option label="Per 48 Minutes" value="object:218">Per 48 Minutes</option><option label="Per 40 Minutes" value="object:219">Per 40 Minutes</option><option label="Per 36 Minutes" value="object:220">Per 36 Minutes</option><option label="Per 1 Minute" value="object:221">Per 1 Minute</option><option label="Per 1 Poss" value="object:222">Per 1 Poss</option><option label="Per 1 Play" value="object:223">Per 1 Play</option><option label="Minutes Per" value="object:224">Minutes Per</option></select>   </label></div></div></div>
+    <div class="columns large-1"><div stats-filter-select="" split="splits.SeasonType" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   		<label>     <div class="label">Season Type</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="SeasonType" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Preseason" value="object:212">Preseason</option><option label="Regular Season" value="object:211" selected="selected">Regular Season</option><option label="Playoffs" value="object:213">Playoffs</option></select>   </label></div></div></div>
+    <div class="columns large-1 end"><div stats-filter-select="" split="splits.PerMode" autorun="true" class="stats-filter-select"><div class="inner" ng-class="{toggled: (split.selected.val!=split.default)}">   <label>     <div class="label">Per Mode</div>     <div class="reset" ng-click="resetSplit();" role="button" tabindex="0"><i class="fa fa-times" aria-hidden="true"></i></div>     <select name="PerMode" ng-model="split.selected" ng-change="setSplit(split.selected)" ng-options="v.text for v in split.options" class="ng-pristine ng-untouched ng-valid ng-not-empty" aria-invalid="false"><option label="Totals" value="object:215">Totals</option><option label="Per Game" value="object:214" selected="selected">Per Game</option><option label="Per 100 Poss" value="object:216">Per 100 Poss</option><option label="Per 100 Plays" value="object:217">Per 100 Plays</option><option label="Per 48 Minutes" value="object:218">Per 48 Minutes</option><option label="Per 40 Minutes" value="object:219">Per 40 Minutes</option><option label="Per 36 Minutes" value="object:220">Per 36 Minutes</option><option label="Per 1 Minute" value="object:221">Per 1 Minute</option><option label="Per 1 Poss" value="object:222">Per 1 Poss</option><option label="Per 1 Play" value="object:223">Per 1 Play</option><option label="Minutes Per" value="object:224">Minutes Per</option></select>   </label></div></div></div>
+  </div>
+
+  <div class="stats-filters-advanced ng-hide" ng-show="showSplits" aria-hidden="true">
+    <div class="stats-filters-advanced__bottom">
+      <stats-run-it><a href="https://stats.nba.com/player/201142/" class="run-it" ripple="" ng-click="runit();">Run It</a></stats-run-it>
+    </div>
+  </div>
+>>>>>>> master
 
 
                                                         </tr>
